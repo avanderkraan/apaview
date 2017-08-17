@@ -1,0 +1,541 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+    <!-- <link rel="icon" href="favicon.ico" sizes="16x16" type="image/ico">
+	-->
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <!-- The above 3 meta tags *must* come first in the head; any other head content must come *after* these tags -->
+	<title>APA6</title>
+
+    <!-- Bootstrap -->
+    <link href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" rel="stylesheet">
+    <!-- HTML5 shim and Respond.js for IE8 support of HTML5 elements and media queries -->
+    <!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
+    <!--[if lt IE 9]>
+      <script src="https://oss.maxcdn.com/html5shiv/3.7.2/html5shiv.min.js"></script>
+      <script src="https://oss.maxcdn.com/respond/1.4.2/respond.min.js"></script>
+    <![endif]-->
+    
+    <!-- jQuery (necessary for Bootstrap's JavaScript plugins) -->
+	<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.0/jquery.min.js"></script>
+
+    <!-- Include all compiled plugins (below), or include individual files as needed -->
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
+	<style>
+	body {
+		background-color: #F9F9F9;
+	}
+	.bg-brand {
+		background-color: #00A6D6;
+	}
+	.white {
+		color: #FFFFFF;
+	}
+	.bordered {
+	    border: 1px solid black;
+	    padding: 3px;
+	    text-align: left;
+	    border-collapse: collapse;
+		font-family: "Times New Roman", Times, serif;
+		font-size: .85em;
+	}
+	#toggleExample:hover {
+		cursor: pointer;
+	}
+	
+	.cHeading {
+		color: #060606;
+	}
+	
+	</style>
+</head>
+<body>
+	<div class="container">
+		<div class="row bg-brand">
+			<div class="col-xs-3"><img src="https://www.library.tudelft.nl/fileadmin/templates/images/tudelft-logo-transparant-275x80.png" height="35" width="70"></div>
+			<div class="col-xs-9 h2 white">APA6 Citation style</div>
+		</div>
+		<div class="row">
+			<div class="col-xs-10">
+				<div class="row">
+					<div class="col-xs-offset-2 col-xs-3 glyphicon glyphicon-arrow-up"></div>
+					<div class="col-xs-offset-1 col-xs-3 glyphicon glyphicon-arrow-up"></div>
+				</div>
+				<div class="row">
+					<div id="headingoptions" class="col-xs-offset-2 col-xs-3">heading list</div>
+					<div id="typeoptions" class="col-xs-offset-1 col-xs-3">type list</div>
+				</div>
+				<div class="row">
+					<div class="col-xs-offset-2 col-xs-3 glyphicon glyphicon-arrow-down"></div>
+					<div class="col-xs-offset-1 col-xs-3 glyphicon glyphicon-arrow-down"></div>
+				</div>
+			</div>
+		</div>
+		<div class="row">
+			<div class="col-xs-12">
+				<div class="panel panel-info">
+					<div class="panel-heading panel-title">In-text example</div>
+					<div id="in-text-example" class="panel-body">Hier het voorbeeld</div>
+				</div>
+			</div>	
+		</div>
+		<div class="row">
+			<div class="col-xs-12">
+				<div class="panel panel-info">
+					<div class="panel-heading panel-title">Reference list example</div>
+					<div id="reference-list-example" class="panel-body">Hier het voorbeeld</div>
+				</div>
+			</div>	
+		</div>
+		<div class="row">
+			<div class="col-xs-12">
+				<div class="panel panel-info">
+					<div class="panel-heading panel-title">Remark</div>
+					<div id="remark" class="panel-body">Hier het voorbeeld</div>
+				</div>
+			</div>	
+		</div>
+	</div>
+	
+	Stappen:
+	<ol>
+		<li>
+			Bestaand apa6 bestand, via Excel -> save as HTML -> inlezen via de Choose File knop <span id="toggleExample">(Klik hier voor een voorbeeld)</span><span id="example">
+			<table class="bordered">
+				<tr><td class="bordered">Heading</td><td class="bordered">Types</td><td class="bordered">In-text example</td><td class="bordered">Reference list example</td><td class="bordered">Remark</td></tr>
+				<tr><td class="bordered">Books</td><td class="bordered">Paper book</td><td class="bordered">Dorf (2006, p. 51)</td><td class="bordered">Dorf, R. C. (2006). The electrical engineering handbook (3rd ed.). Boca Raton, FL: CRC/Taylor & Francis.</td><td class="bordered">Place information about editions, volume numbers, and page numbers in parentheses with the period after the parentheses: (Rev. ed.). or (Vol. xx, pp. xxx-xxx).</td></tr>
+			</table>
+			</span>
+		</li>
+	</ol>
+	</br>
+	<br>
+	<div id="dvImportSegments" class="fileupload ">
+	    <fieldset>
+	        <legend>Upload your CSV File</legend>
+	            <input type="file" name="File Upload" id="txtFileUpload" accept=".htm" />
+	   </fieldset>
+	</div>
+	
+	<div id="result"></div>
+
+<script>
+	// global data
+	var apaContent = "";
+</script>
+	
+<script>
+	// 
+	function toJSON(data) {
+		// split on tr and td
+		// First row contains head-information
+		myJSON = {}
+		myArray = [];
+		try {
+			var myRowArray = $(data).find('tr');
+			var myRememberCol0;             // remember content of column 0 because it does not always have a value
+			var myColHeaderArray = [];      // contains header text to preserve for content keys
+			var myColArray = [];			// contains content
+
+			var myHeader = {};
+			var headerId = 0;               // first part for identifying a record that consist of a header and a type
+			var typeId = 0;                 // second part for identifying a record that consist of a header and a type
+			var skipEmptyHeader = [];       // contains colums to skip, because the header is empty
+			$.each(myRowArray, function(rIndex, rValue) {
+				var myContent = {};
+				$.each($(rValue).find('td'), function(cIndex, cValue) {
+					var myText = $(cValue).text();
+					if ((myText == "") && (rIndex == 0)) {  // add empty header row number
+						skipEmptyHeader.push(cIndex);
+					}
+					console.log('skipEmptyHeader' + JSON.stringify(skipEmptyHeader));
+					// start fill first column if it contains an empty values
+					if (cIndex == 0) {
+						if (myText.replace(/\s+/g, "") == "") {
+							myText = myRememberCol0;
+							typeId += 1;
+						}
+						else {
+							myRememberCol0 = myText;
+							if (rIndex > 1) {
+								headerId += 1;
+								typeId = 0;
+							}
+						}
+					}
+					myText = myText.replace(/\n/g,"<br>").replace(/\s/g,"&nbsp;"); //.replace(/\*/g,"_").replace(/\./g,"_");
+					// end fill first column if there are empty values
+					// start get header information
+					if (rIndex == 0) {
+						if ($.inArray(cIndex, skipEmptyHeader) == -1) {  // skip for empty headers
+							myHeader[cIndex] = myText;
+							//myColHeaderArray.push(myText);   // remember to serve as key for content value (text)
+							myColHeaderArray.push(cIndex.toString());   // remember to serve as key for content value (number as text)
+						}
+					}
+					// end get header information
+					// start get content information and combine this with the previous gathered header information
+					// add a content-id which has the value of 0..n for the heading and 0..n for the type, joined by a _ (e.g. 0_0, 0_1) 
+					if (rIndex > 0) {
+						
+						myContent["id"] = headerId.toString() + "_" + typeId.toString();
+						if ($.inArray(cIndex, skipEmptyHeader) == -1) {  // skip for empty headers
+							myContent[myColHeaderArray[cIndex]] = myText;
+						}
+					}
+					// end get content information and combine this with the previous gathered header information
+				});
+				if (rIndex > 0) {
+					myColArray.push(myContent);
+				}
+			});
+			myJSON["header"] = myHeader;
+			myJSON["content"] = myColArray;
+		    //console.log(JSON.stringify(myJSON));
+			return myJSON;
+		}
+		catch(e) {
+			console.log(e);
+		}
+	};
+</script>
+
+<script>
+    $(document).ready(function() {
+
+    // The event listener for the file upload
+    document.getElementById('txtFileUpload').addEventListener('change', upload, false);
+
+    // Method that checks that the browser supports the HTML5 File API
+    function browserSupportFileUpload() {
+        var isCompatible = false;
+        if (window.File && window.FileReader && window.FileList && window.Blob) {
+        isCompatible = true;
+        }
+        return isCompatible;
+    }
+
+    // Method that reads and processes the selected file
+    function upload(evt) {
+		if (!browserSupportFileUpload()) {
+        	alert('The File APIs are not fully supported in this browser!');
+        } 
+		else {
+           	var data = null;
+           	var file = evt.target.files[0] || testFile;
+           	var reader = new FileReader();
+           	reader.readAsText(file);
+           	reader.onload = function(event) {
+  				try {
+                   	data = event.target.result;
+					apaContent = toJSON(data);
+					showHeadingOptions(apaContent);
+					showTypeOptions(apaContent);
+					showExamples(apaContent);
+					console.log(JSON.stringify(apaContent));
+					$('#select-heading').focus();
+				}
+				catch(err) {
+					console.log(err);
+					alert('Could not read file with separators , and ; (comma and semicolon). Use only one of these in your inputfile. Please change the separator character and try again.')
+				}
+			
+               	if (data && data.length > 0) {
+                 		//alert('Imported -' + data.length + '- rows successfully!');
+			    	// 1 toegevoegde regel: createForm(data);
+			    	//createForm(data);
+			  	  startEvents();   // opnieuw, omdat de html is aangepast
+               	} else {
+                   	alert('No data to import!');
+               	}
+           	};
+           	reader.onerror = function() {
+               	alert('Unable to read ' + file.fileName);
+           	};
+        }
+    }
+	
+	
+	// start get dummy file for testing purposes
+	
+	var fileContent = "\
+<table border=0 cellpadding=0 cellspacing=0 width=1064 style='border-collapse:\
+ collapse;table-layout:fixed;width:1064pt'>\
+ <col width=110 style='mso-width-source:userset;mso-width-alt:4693;width:110pt'>\
+ <col width=131 style='mso-width-source:userset;mso-width-alt:5589;width:131pt'>\
+ <col width=147 style='mso-width-source:userset;mso-width-alt:6272;width:147pt'>\
+ <col width=250 style='mso-width-source:userset;mso-width-alt:10666;width:250pt'>\
+ <col width=213 span=2 style='mso-width-source:userset;mso-width-alt:9088;\
+ width:213pt'>\
+ <tr class=xl65 height=15 style='height:15.0pt'>\
+  <td height=15 class=xl69 width=110 style='height:15.0pt;width:110pt'>Heading</td>\
+  <td class=xl69 width=131 style='border-left:none;width:131pt'>Types</td>\
+  <td class=xl69 width=147 style='border-left:none;width:147pt'>In-tekst\
+  example</td>\
+  <td class=xl70 width=250 style='border-left:none;width:250pt'>Reference list\
+  example </td>\
+  <td class=xl66 width=213 style='border-left:none;width:213pt'>Remark</td>\
+  <td class=xl74 width=213 style='width:213pt'></td>\
+ </tr>\
+ <tr class=xl65 height=56 style='height:56.0pt'>\
+  <td height=56 class=xl81 style='height:56.0pt;border-top:none'>Books</td>\
+  <td class=xl73 style='border-top:none;border-left:none'>Paper book</td>\
+  <td class=xl71 style='border-top:none;border-left:none'>Dorf (2006, p.\
+  51)<span style='mso-spacerun:yes'>&nbsp;</span></td>\
+  <td class=xl76 width=250 style='border-top:none;border-left:none;width:250pt'>Dorf,\
+  R. C. (2006). <font class='font10'>The electrical engineering     handbook</font><font\
+  class='font9'><span style='mso-spacerun:yes'>&nbsp;</span>(3rd ed.). Boca\
+  Raton, FL: CRC/Taylor &amp; Francis.<span\
+  style='mso-spacerun:yes'>&nbsp;</span></font></td>\
+  <td class=xl68 width=213 style='border-top:none;border-left:none;width:213pt'>Place\
+  information about editions, volume numbers, and page numbers in parentheses\
+  with the period after the parentheses: (Rev. ed.). or (Vol. xx, pp. xxx-xxx).</td>\
+  <td class=xl75 width=213 style='width:213pt'></td>\
+ </tr>\
+ <tr height=42 style='height:42.0pt'>\
+  <td height=42 class=xl67 style='height:42.0pt;border-top:none'>&nbsp;</td>\
+  <td class=xl71 style='border-top:none;border-left:none'>Electronic book with\
+  doi</td>\
+  <td class=xl79 style='border-top:none;border-left:none'>Ardia<span\
+  style='mso-spacerun:yes'>&nbsp; </span>(2008, p. xx)<span\
+  style='mso-spacerun:yes'>&nbsp;</span></td>\
+  <td class=xl78 width=250 style='border-top:none;border-left:none;width:250pt'>Ardia,\
+  D. (2008). <font class='font6'>Financial risk management with Bayesian\
+  estimation of GARCH models: theory and applications</font><font class='font0'>.\
+  doi:10.1007/978-3-540-78657-3</font></td>\
+  <td class=xl77 width=213 style='border-top:none;border-left:none;width:213pt'>For\
+  books or chapters available online, the electronic retrieval statement takes\
+  the place of publisher location and name.</td>\
+  <td></td>\
+ </tr>\
+ <tr height=42 style='height:42.0pt'>\
+  <td height=42 class=xl67 style='height:42.0pt;border-top:none'>&nbsp;</td>\
+  <td class=xl71 style='border-top:none;border-left:none'>Electronic book with\
+  link</td>\
+  <td class=xl79 style='border-top:none;border-left:none'>Edwards (2008, p.\
+  xx)<span style='mso-spacerun:yes'>&nbsp;</span></td>\
+  <td class=xl78 width=250 style='border-top:none;border-left:none;width:250pt'>Edwards,\
+  P. N. (2008). <font class='font6'>How to Read a Book</font><font class='font0'><span\
+  style='mso-spacerun:yes'>&nbsp;</span>(v 5.0). Retrieved from\
+  http://pne.people.si.umich.edu/PDF/howtoread.pdf</font></td>\
+  <td class=xl78 width=213 style='border-top:none;border-left:none;width:213pt'>For\
+  books or chapters available online, the electronic retrieval statement takes\
+  the place of publisher location and name.</td>\
+  <td></td>\
+ </tr>\
+ <tr height=42 style='height:42.0pt'>\
+  <td height=42 class=xl67 style='height:42.0pt;border-top:none'>&nbsp;</td>\
+  <td class=xl71 style='border-top:none;border-left:none'>Edited book</td>\
+  <td class=xl78 width=147 style='border-top:none;border-left:none;width:147pt'>The\
+  Encyclopedia of aerospace engineering (2010, para 2.1)<span\
+  style='mso-spacerun:yes'>&nbsp;</span></td>\
+  <td class=xl77 width=250 style='border-top:none;border-left:none;width:250pt'>Blockley,\
+  R., &amp; Shyy, W. (Eds.). (2010). <font class='font6'>Encyclopedia of\
+  aerospace engineering</font><font class='font0'>. (6th ed., Vols. 1-9).\
+  Milton Keynes, England: Wiley.</font></td>\
+  <td class=xl78 width=213 style='border-top:none;border-left:none;width:213pt'>For\
+  works with a large editorial board, use the name of the lead editor, followed\
+  by et al.</td>\
+  <td></td>\
+ </tr>"
+	
+	
+	function getDummyFile() {
+		/*
+		$("#testFile").on("getTest", function(event, param1) {
+			console.log(param1);
+		});
+		console.log('getfile');
+		$('#testFile').trigger("getTest",'dd');
+		*/
+		var f = new File([fileContent], "filename.txt", {type: "text/plain", lastModified: new Date()});
+		//console.log(f);
+       	var reader = new FileReader();
+       	reader.readAsText(f);
+       	reader.onload = function(event) {
+			try {
+               	data = event.target.result;
+				apaContent = toJSON(data);
+				showContentOnScreen(apaContent);
+				showHeadingOptions(apaContent);
+				showTypeOptions(apaContent);
+				showExamples(apaContent);
+				$('#select-heading').focus();
+				console.log(JSON.stringify(apaContent));
+			}
+			catch(err) {
+				console.log(err);
+			}
+		}
+	}
+	//getDummyFile();
+	// end get dummy file for testing purposes
+
+	// start showing the heading options so users can pick a value for getting a corrsponding type-list
+	function showHeadingOptions(apaContent) {
+		try {
+			var headingoptions = '<select id="select-heading" size="6"><br>';  // options for selecting a list of type-options
+			var headinglist = {};
+			$.each(apaContent.content, function(cIndex, cValue){
+				var key = cValue.id.split("_")[0];
+				$.each(cValue, function(index, value){
+					if (index == 0) {						// 0 = headings
+						headinglist[key] = value;
+					}
+				});
+			});
+			$.each(headinglist, function(index, value){
+				var selected = "";
+				if (index == 0) {							// first element
+					selected = " selected ";
+				}
+				headingoptions += '<option value="' + index + '"' + selected + '>' + value + '</option><br>';
+			});
+			headingoptions += '</select><br>';
+			$('#headingoptions').html(headingoptions);
+		}
+		catch(err) {
+			console.log(err);
+		}
+	} 
+	// end showing the heading options so users can pick a value for getting a corrsponding type-list
+
+	// start showing the type options so users can pick a value for getting a corresponding content
+	function showTypeOptions(apaContent) {
+		try {
+			var typeoptions = '<select id="select-type" size="6"><br>'     // options for a type belonging to the selected header-option
+			var typelist = {};
+			$.each(apaContent.content, function(cIndex, cValue){
+				var selectedHeading = $('#headingoptions :selected').val();
+				var key = cValue.id;
+				var headingKey = cValue.id.split("_")[0];
+				$.each(cValue, function(index, value){
+					if (headingKey == selectedHeading) {
+						if (index == 1) {						// 1 = type
+							typelist[key] = value;
+						}
+					}
+				});
+			});
+			$.each(typelist, function(index, value){
+				var selected = "";
+				if (index.split("_")[1] == 0) {					// first element
+					selected = " selected ";
+				}
+				typeoptions += '<option value="' + index + '"' + selected + '>' + value + '</option><br>';
+			});
+			typeoptions += '</select><br>';
+			$('#typeoptions').html(typeoptions);
+		}
+		catch(err) {
+			console.log(err);
+		}
+	} 
+	// end showing the type options so users can pick a value for getting a corresponding content
+
+	// start showing the examples
+	function showExamples(apaContent) {
+		try {
+			$.each(apaContent.content, function(cIndex, cValue){
+				var recordId = $('#typeoptions :selected').val();
+				if (cValue.id == recordId) {
+					$.each(cValue, function(index, value){
+						if (index == 2) {						// 2 = In-text example
+							$('#in-text-example').html(value);
+						}
+						if (index == 3) {						// 3 = Reference-list example
+							$('#reference-list-example').html(value);
+						}
+						if (index == 4) {						// 4 = Remark
+							$('#remark').html(value);
+						}
+					});
+				}
+			});
+		}
+		catch(err) {
+			console.log(err);
+		}
+	} 
+	// end showing the examples
+
+
+	function showContentOnScreen(apaContent) {
+		//myHeader = JSON.stringify(apaContent.header[0]).replace(/^"/,"").replace(/"$/,"").replace(/\n/g,"_").replace(/\s/g,"_").replace(/\./g,"_").replace(/\*/g,"_");
+		//console.log(myHeader);
+		//var myClass = JSON.stringify(apaContent.header[0]).replace(/^"/,"").replace(/"$/,"").replace(/\n/g,"_").replace(/\s/g,"_").replace(/\./g,"_").replace(/\*/g,"_");
+		//$("#result").append("<div class='" + myClass + "'><div>");
+		//$("." + myClass).append(myHeader);
+		
+		//console.log(JSON.stringify(apaContent.content));
+		try {
+			$.each(apaContent.content, function(cIndex, cValue){
+				console.log(cIndex + ' ' + JSON.stringify(cValue));
+				$.each(cValue, function(index, value){
+					index = index.replace(/\n/g,"_").replace(/\s/g,"_").replace(/\./g,"_").replace(/\*/g,"_");
+					myClass = JSON.stringify(apaContent.header[cIndex]);
+					if (myClass != undefined) {
+						try {
+							if (myClass.substring(0,1) == '"') {
+								myClass = myClass.substring(1, myClass.length);
+							}  
+							if (myClass.substring(myClass.length-1, myClass.length) == '"') {
+								myClass = myClass.substring(0, myClass.length-1);
+							} 
+						}
+						catch(err) {
+							console.log(err);
+						}
+						myClass = myClass.replace(/\s/g,"_").replace(/\./g,"_").replace(/\*/g,"_");
+						$("#result").append("<div class='" + myClass + index + "'><div>");
+						console.log('r'+cIndex);
+						$("." + myClass+index).css({"color":"rgb(" + cIndex*20 + "," + cIndex + "," + cIndex + ")"});
+						
+						myContent = JSON.stringify(value).replace(/^"/,"").replace(/"$/,"");						
+						console.log(myContent + ' ' + JSON.stringify(value) + "uuuu" + myClass + index);
+						$("." + myClass + index).append(myContent);
+					}
+				});
+			});
+		}
+		catch(err) {
+			console.log(err);
+		}
+	} 
+	
+	function startEvents(){
+		$('#toggleExample').off('click').on('click', function(){
+			$('#example').toggle();
+			if ($('#example').is(':visible')) {
+				$(this).text('(voorbeeld inklappen)');
+			}
+			else {
+				$(this).text('(voorbeeld uitklappen)');
+			}
+		});
+		$('#headingoptions').off('change').on('change', function(){
+			showTypeOptions(apaContent);
+			showExamples(apaContent);
+			$('#select-type').focus();
+		});
+		$('#typeoptions').off('change').on('change', function(){
+			showExamples(apaContent);
+		});
+	};
+
+
+	$(function initFunctions(){
+		$("#example").hide();
+		startEvents();
+	});
+
+
+	
+});
+</script>
+</body>
+</html>
+
