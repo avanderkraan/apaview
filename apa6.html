@@ -46,13 +46,10 @@
 		cursor: pointer;
 	}
 	
-	.cHeading {
-		color: #060606;
-	}
-	
 	</style>
 </head>
 <body>
+	<div id="data-style"></div>
 	<div class="container">
 		<div class="row bg-brand">
 			<div class="col-xs-3"><img src="https://www.library.tudelft.nl/fileadmin/templates/images/tudelft-logo-transparant-275x80.png" height="35" width="70"></div>
@@ -99,6 +96,8 @@
 			</div>	
 		</div>
 	</div>
+	
+	<div id="tyle">hier style</div>
 	
 	Stappen:
 	<ol>
@@ -166,7 +165,13 @@
 							}
 						}
 					}
-					myText = myText.replace(/\n/g,"<br>").replace(/\s/g,"&nbsp;"); //.replace(/\*/g,"_").replace(/\./g,"_");
+					// start keep layout in the example fields
+					if (cIndex > 1) {
+						myText = $(cValue).html();
+					}
+					//myText = myText.replace(/\n/g,"<br>").replace(/\s/g,"&nbsp;"); //.replace(/\*/g,"_").replace(/\./g,"_");
+					// end keep layout in the example fields
+					
 					// end fill first column if there are empty values
 					// start get header information
 					if (rIndex == 0) {
@@ -194,13 +199,20 @@
 			});
 			myJSON["header"] = myHeader;
 			myJSON["content"] = myColArray;
-		    //console.log(JSON.stringify(myJSON));
+		    //console.log(JSON.stringify(myJSON));			
 			return myJSON;
 		}
 		catch(e) {
 			console.log(e);
 		}
 	};
+</script>
+	
+<script>
+	function addStyle(data) {
+		var layout = $(data).filter('style');		// head section requires filter instead of find
+		$("#data-style").html($(layout));
+	}
 </script>
 
 <script>
@@ -232,10 +244,10 @@
   				try {
                    	data = event.target.result;
 					apaContent = toJSON(data);
+					addStyle(data);
 					showHeadingOptions(apaContent);
 					showTypeOptions(apaContent);
 					showExamples(apaContent);
-					console.log(JSON.stringify(apaContent));
 					$('#select-heading').focus();
 				}
 				catch(err) {
