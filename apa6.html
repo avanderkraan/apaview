@@ -96,9 +96,6 @@
 			</div>	
 		</div>
 	</div>
-	
-	<div id="tyle">hier style</div>
-	
 	Stappen:
 	<ol>
 		<li>
@@ -143,6 +140,8 @@
 			var headerId = 0;               // first part for identifying a record that consist of a header and a type
 			var typeId = 0;                 // second part for identifying a record that consist of a header and a type
 			var skipEmptyHeader = [];       // contains colums to skip, because the header is empty
+			var headerArray = [];			// keeps track of headers for updating the id-key of a content object
+			var headerList = {};            // keeps track of headers and types for updating the id-key of a content object
 			$.each(myRowArray, function(rIndex, rValue) {
 				var myContent = {};
 				$.each($(rValue).find('td'), function(cIndex, cValue) {
@@ -150,19 +149,14 @@
 					if ((myText == "") && (rIndex == 0)) {  // add empty header row number
 						skipEmptyHeader.push(cIndex);
 					}
-					console.log('skipEmptyHeader' + JSON.stringify(skipEmptyHeader));
 					// start fill first column if it contains an empty values
 					if (cIndex == 0) {
+						//console.log('myContent ' + headerList);
 						if (myText.replace(/\s+/g, "") == "") {
 							myText = myRememberCol0;
-							typeId += 1;
 						}
 						else {
 							myRememberCol0 = myText;
-							if (rIndex > 1) {
-								headerId += 1;
-								typeId = 0;
-							}
 						}
 					}
 					// start keep layout in the example fields
@@ -173,6 +167,33 @@
 					// end keep layout in the example fields
 					
 					// end fill first column if there are empty values
+
+					// start set id
+					if ((myText.replace(/\s+/g, "") != "") && (cIndex == 0)) {  // header; add headerList
+						if (myText in headerList) { 
+							var numberOfAmbiguisHeadings = headerList[myText].length;
+							headerList[myText].push(numberOfAmbiguisHeadings);	// so there must be another heading which leads to updating a type by 1 (that is the push)
+						}
+						else {
+							headerList[myText] = [0];		// first appearance of this heading
+							headerArray.push(myText);		// the position in this array is the id for a heading 
+						}
+					}
+					//console.log('headerList >' + myRememberCol0 + '< ' + JSON.stringify(headerList));
+					// reads per column, so headerList is up to dat until this row and myRememberCol0 holds the last value of heading (=header)
+					
+					if ((rIndex > 0) && (cIndex == 1)) {  // type; set id
+						if (myRememberCol0 in headerList) {
+							headerId = $.inArray(myRememberCol0, headerArray) || 0;
+							if (headerId > 0) {
+								//console.log('in header');
+								typeId = headerList[myRememberCol0].length;
+							}
+						}
+						myContent["id"] = (headerId - 1).toString() + "_" + (typeId - 1).toString();	// offset = 0
+					}
+					// end set id 
+					
 					// start get header information
 					if (rIndex == 0) {
 						if ($.inArray(cIndex, skipEmptyHeader) == -1) {  // skip for empty headers
@@ -185,8 +206,6 @@
 					// start get content information and combine this with the previous gathered header information
 					// add a content-id which has the value of 0..n for the heading and 0..n for the type, joined by a _ (e.g. 0_0, 0_1) 
 					if (rIndex > 0) {
-						
-						myContent["id"] = headerId.toString() + "_" + typeId.toString();
 						if ($.inArray(cIndex, skipEmptyHeader) == -1) {  // skip for empty headers
 							myContent[myColHeaderArray[cIndex]] = myText;
 						}
@@ -194,12 +213,15 @@
 					// end get content information and combine this with the previous gathered header information
 				});
 				if (rIndex > 0) {
-					myColArray.push(myContent);
+					//console.log(Object.keys(myHeader).length + ' '+ Object.keys(myContent).length);
+					if (Object.keys(myHeader).length +1 == Object.keys(myContent).length) {		// +1 = for extra id key in myContent
+						myColArray.push(myContent);
+					}
 				}
 			});
 			myJSON["header"] = myHeader;
 			myJSON["content"] = myColArray;
-		    //console.log(JSON.stringify(myJSON));			
+		    //console.log(JSON.stringify(myJSON));
 			return myJSON;
 		}
 		catch(e) {
