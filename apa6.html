@@ -57,20 +57,32 @@
 		</div>
 		<div class="row">
 			<div class="col-xs-10">
+				<!--
 				<div class="row">
 					<div class="col-xs-offset-2 col-xs-3 glyphicon glyphicon-arrow-up"></div>
 					<div class="col-xs-offset-1 col-xs-3 glyphicon glyphicon-arrow-up"></div>
 				</div>
+				-->
 				<div class="row">
-					<div id="headingoptions" class="col-xs-offset-2 col-xs-3">heading list</div>
+					<div class="col-xs-12">boven</div>
+				</div> 
+				<div class="row">
+					<div id="headingoptions" class="col-xs-offset-1 col-xs-3">heading list</div>
 					<div id="typeoptions" class="col-xs-offset-1 col-xs-3">type list</div>
+					<div id="combinationoptions" class="col-xs-offset-1 col-xs-3">combination list</div>
 				</div>
+				<div class="row">
+					<div class="col-xs-12">onder</div>
+				</div> 
+				<!--
 				<div class="row">
 					<div class="col-xs-offset-2 col-xs-3 glyphicon glyphicon-arrow-down"></div>
 					<div class="col-xs-offset-1 col-xs-3 glyphicon glyphicon-arrow-down"></div>
 				</div>
+				-->
 			</div>
 		</div>
+		JSON is sorted, wel even controleren of alles goed is en zorg voor een default selected item
 		<div class="row">
 			<div class="col-xs-12">
 				<div class="panel panel-info">
@@ -84,6 +96,14 @@
 				<div class="panel panel-info">
 					<div class="panel-heading panel-title">Reference list example</div>
 					<div id="reference-list-example" class="panel-body">Hier het voorbeeld</div>
+				</div>
+			</div>	
+		</div>
+		<div class="row">
+			<div class="col-xs-12">
+				<div class="panel panel-info">
+					<div class="panel-heading panel-title">Figure example</div>
+					<div id="figure-heading-example" class="panel-body">Hier het voorbeeld</div>
 				</div>
 			</div>	
 		</div>
@@ -119,10 +139,83 @@
 	<div id="result"></div>
 
 <script>
+	// start get key number from header name
+	function nameToKey(headerData, myName) {
+		var result = -1;
+		$.each(headerData, function(index, value) {
+			if (myName == value) {
+				result = index;
+			};
+		});
+		return result;
+	}
+	// end get key number from header name
+</script>
+
+<script>
 	// global data
 	var apaContent = "";
 </script>
-	
+
+<script>
+	function getSortedContentWithChangedId(data) {
+		/*
+	"content": [{\
+		"0": "Books",\
+		"1": "Paper book",\
+		"2": "",\
+		"3": "1",\
+		"4": "1",\
+		"5": "Dorf<span style=\'mso-spacerun:yes\'></span>",\
+		"6": "Dorf, R. C.. <font class=\"font10\">The electrical engineering handbook</font><font class=\"font9\"><span style=\"mso-spacerun:yes\"></span>(3rd ed.). Boca Raton, FL: CRC/Taylor &amp; Francis.<span style=\"mso-spacerun:yes\"></span></font>",\
+		"7": "",\
+		"8": "Place information about editions, volume numbers, and page numbers in parentheses with the period after the parentheses:. or.",\
+		"id": "0_0"\
+	}, {\
+		"0": "Books",\
+		"1": "Electronic book with doi",\
+		"2": "",\
+		"3": "1",\
+		"4": "3",\
+		"5": "Ardia<span style=\"mso-spacerun:yes\"> </span>(2008, p. xx)<span style=\"mso-spacerun:yes\"></span>",\
+		"6": "Ardia, D.. <font class=\"font6\">Financial risk management with Bayesian estimation of GARCH models: theory and applications</font><font class=\"font0\">. doi:10.1007/978-3-540-78657-3</font>",\
+		"7": "",\
+		"8": "For books or chapters available online, the electronic retrieval statement takes the place of publisher location and name.",\
+		"id": "0_1"\
+	}, {\
+		
+		*/
+		
+		var headingRankingKey = nameToKey(data.header, "Ranking headings");
+		var typeRankingKey = nameToKey(data.header, "Ranking types");
+		var content = [];
+		var sortingArray = [];
+		
+		// ? value.id hier opnieuw bepalen ? 
+		
+		
+		
+		$.each($(data.content), function(key, value) {
+			var sortKey = pad(headingRankingKey, 3) + "-" + pad(typeRankingKey, 3) + "-" + value.id;
+			sortingArray.push(sortKey);
+		});
+		//console.log(headingRankingKey + ' ' + typeRankingKey + ' ' +JSON.stringify(sortingArray));
+		
+		sortingArray = [...sortingArray].sort((a, b) => a.localeCompare(b));
+		for (i = 0; i < sortingArray.length; i++) {
+			var sortedId = sortingArray[i].split("-")[2];
+			$.each($(data.content), function(key, value) {
+				if (value.id == sortedId) {
+					//console.log(value);
+					content.push(value);
+				}
+			});
+		}
+		data.content = content;
+		return data;
+	}
+</script>
+
 <script>
 	// 
 	function toJSON(data) {
@@ -197,7 +290,7 @@
 					// start get header information
 					if (rIndex == 0) {
 						if ($.inArray(cIndex, skipEmptyHeader) == -1) {  // skip for empty headers
-							myHeader[cIndex] = myText;
+							myHeader[cIndex] = myText.replace(/\n/g, "").replace(/\s+/g, " ");
 							//myColHeaderArray.push(myText);   // remember to serve as key for content value (text)
 							myColHeaderArray.push(cIndex.toString());   // remember to serve as key for content value (number as text)
 						}
@@ -207,7 +300,8 @@
 					// add a content-id which has the value of 0..n for the heading and 0..n for the type, joined by a _ (e.g. 0_0, 0_1) 
 					if (rIndex > 0) {
 						if ($.inArray(cIndex, skipEmptyHeader) == -1) {  // skip for empty headers
-							myContent[myColHeaderArray[cIndex]] = myText;
+							myContent[myColHeaderArray[cIndex]] = myText.replace(/^\s+/g, "").replace(/\s+/g, " ").replace(/&amp;/g,"").replace(/&nbsp;/g,"").replace(/\t/g,"").replace(/\n/g,"").replace(/ \(.*?\)/g,"").replace(/\\"/g,"\'").replace(/="/g,"='").replace(/">/g,"'>");
+							// doubble headings will be replaced while sorting ...
 						}
 					}
 					// end get content information and combine this with the previous gathered header information
@@ -221,6 +315,9 @@
 			});
 			myJSON["header"] = myHeader;
 			myJSON["content"] = myColArray;
+			//myJSON = getSortedContentWithChangedId(myJSON);
+		    //console.log(JSON.stringify(myJSON));
+			//myJSON = getSorted(myJSON);
 		    //console.log(JSON.stringify(myJSON));
 			return myJSON;
 		}
@@ -231,10 +328,685 @@
 </script>
 	
 <script>
+	function pad (str, max) {
+	  //str = str.toString();
+	  return str.length < max ? pad("0" + str, max) : str;
+	}
+	
+	function getSorted(data) {
+		// expects JSON, combines heading, type and id and returns the sorted JSON
+		var content = [];
+		var sortingArray = [];
+		$.each($(data.content), function(key, value) {
+			var sortKey = pad(value["3"], 3) + "-" + pad(value["4"], 3) + "-" + value.id;
+			sortingArray.push(sortKey);
+		});
+		sortingArray = [...sortingArray].sort((a, b) => a.localeCompare(b));
+		for (i = 0; i < sortingArray.length; i++) {
+			var sortedId = sortingArray[i].split("-")[2];
+			$.each($(data.content), function(key, value) {
+				if (value.id == sortedId) {
+					//console.log(value);
+					content.push(value);
+				}
+			});
+		}
+		data.content = content;
+		return data;
+	}
+</script>
+	
+<script>
 	function addStyle(data) {
 		var layout = $(data).filter('style');		// head section requires filter instead of find
 		$("#data-style").html($(layout));
 	}
+</script>
+
+
+<script>
+var jsonDummy = '\
+{\
+	"header": {\
+		"0": "Heading",\
+		"1": "Types",\
+		"2": "Combines with",\
+		"3": "Ranking headings",\
+		"4": "Ranking types",\
+		"5": "In-tekst example",\
+		"6": "Reference list example",\
+		"7": "Figure heading example",\
+		"8": "Remark"\
+	},\
+	"content": [{\
+		"0": "Books",\
+		"1": "Paper book",\
+		"2": "",\
+		"3": "1",\
+		"4": "1",\
+		"5": "Dorf<span style=\'mso-spacerun:yes\'></span>",\
+		"6": "Dorf, R. C.. <font class=\"font10\">The electrical engineering handbook</font><font class=\"font9\"><span style=\"mso-spacerun:yes\"></span>(3rd ed.). Boca Raton, FL: CRC/Taylor &amp; Francis.<span style=\"mso-spacerun:yes\"></span></font>",\
+		"7": "",\
+		"8": "Place information about editions, volume numbers, and page numbers in parentheses with the period after the parentheses:. or.",\
+		"id": "0_0"\
+	}, {\
+		"0": "Books",\
+		"1": "Electronic book with doi",\
+		"2": "",\
+		"3": "1",\
+		"4": "3",\
+		"5": "Ardia<span style=\"mso-spacerun:yes\"> </span>(2008, p. xx)<span style=\"mso-spacerun:yes\"></span>",\
+		"6": "Ardia, D.. <font class=\"font6\">Financial risk management with Bayesian estimation of GARCH models: theory and applications</font><font class=\"font0\">. doi:10.1007/978-3-540-78657-3</font>",\
+		"7": "",\
+		"8": "For books or chapters available online, the electronic retrieval statement takes the place of publisher location and name.",\
+		"id": "0_1"\
+	}, {\
+		"0": "Books",\
+		"1": "Electronic book with link",\
+		"2": "",\
+		"3": "1",\
+		"4": "4",\
+		"5": "Edwards<span style=\"mso-spacerun:yes\"></span>",\
+		"6": "Edwards, P. N.. <font class=\"font6\">How to Read a Book</font><font class=\"font0\"><span style=\"mso-spacerun:yes\"></span>(v 5.0). Retrieved from http://pne.people.si.umich.edu/PDF/howtoread.pdf</font>",\
+		"7": "",\
+		"8": "For books or chapters available online, the electronic retrieval statement takes the place of publisher location and name.",\
+		"id": "0_2"\
+	}, {\
+		"0": "Books",\
+		"1": "Edited book",\
+		"2": "",\
+		"3": "1",\
+		"4": "2",\
+		"5": "The Encyclopedia of aerospace engineering<span style=\"mso-spacerun:yes\"></span>",\
+		"6": "Blockley, R., &amp; Shyy, W... <font class=\"font6\">Encyclopedia of aerospace engineering</font><font class=\"font0\">.. Milton Keynes, England: Wiley.</font>",\
+		"7": "",\
+		"8": "For works with a large editorial board, use the name of the lead editor, followed by et al.",\
+		"id": "0_3"\
+	}, {\
+		"0": "Books",\
+		"1": "Book chapter",\
+		"2": "",\
+		"3": "1",\
+		"4": "5",\
+		"5": "Gibson<span style=\"mso-spacerun:yes\"></span>",\
+		"6": "Gibson, C. C..<font class=\"font10\"> </font><font class=\"font9\">Impact of the larger social context on the distance learner</font><font class=\"font10\">.</font><font class=\"font9\"> In S. Allsop </font><font class=\"font0\">(Ed.),</font><font class=\"font9\"> </font><font class=\"font10\">International Council for</font><font class=\"font6\"> Distance</font><font class=\"font10\"> Education: One world many voices: Quality in open</font><font class=\"font6\"> and</font><font class=\"font10\"> </font><font class=\"font6\">distance learning</font><font class=\"font0\"><span style=\"mso-spacerun:yes\"></span>(pp. 279-282). Chicago, IL: Milton Keynes.</font>",\
+		"7": "",\
+		"8": "",\
+		"id": "0_4"\
+	}, {\
+		"0": "Books",\
+		"1": "Brochure",\
+		"2": "",\
+		"3": "1",\
+		"4": "",\
+		"5": "",\
+		"6": "",\
+		"7": "",\
+		"8": "",\
+		"id": "0_5"\
+	}, {\
+		"0": "Books",\
+		"1": "Thesis",\
+		"2": "",\
+		"3": "1",\
+		"4": "",\
+		"5": "",\
+		"6": "",\
+		"7": "",\
+		"8": "",\
+		"id": "0_6"\
+	}, {\
+		"0": "Books",\
+		"1": "Lecture note",\
+		"2": "",\
+		"3": "1",\
+		"4": "",\
+		"5": "",\
+		"6": "",\
+		"7": "",\
+		"8": "",\
+		"id": "0_7"\
+	}, {\
+		"0": "Authors",\
+		"1": "Single author",\
+		"2": "Books, Articles & Papers",\
+		"3": "7",\
+		"4": "",\
+		"5": "",\
+		"6": "",\
+		"7": "",\
+		"8": "",\
+		"id": "1_0"\
+	}, {\
+		"0": "Books",\
+		"1": "Single author",\
+		"2": "",\
+		"3": "1",\
+		"4": "",\
+		"5": "",\
+		"6": "",\
+		"7": "",\
+		"8": "",\
+		"id": "0_8"\
+	}, {\
+		"0": "Articles & Papers",\
+		"1": "Single author",\
+		"2": "",\
+		"3": "2",\
+		"4": "",\
+		"5": "",\
+		"6": "",\
+		"7": "",\
+		"8": "",\
+		"id": "2_0"\
+	}, {\
+		"0": "Authors",\
+		"1": "Organisation/Institution",\
+		"2": "Reports",\
+		"3": "7",\
+		"4": "",\
+		"5": "",\
+		"6": "",\
+		"7": "",\
+		"8": "",\
+		"id": "1_1"\
+	}, {\
+		"0": "Books",\
+		"1": "Organisation/Institution",\
+		"2": "",\
+		"3": "1",\
+		"4": "",\
+		"5": "",\
+		"6": "",\
+		"7": "",\
+		"8": "",\
+		"id": "0_9"\
+	}, {\
+		"0": "Reports",\
+		"1": "Organisation/Institution",\
+		"2": "",\
+		"3": "3",\
+		"4": "",\
+		"5": "",\
+		"6": "",\
+		"7": "",\
+		"8": "",\
+		"id": "3_0"\
+	}, {\
+		"0": "Authors",\
+		"1": "Two authors",\
+		"2": "Books, Articles & Papers",\
+		"3": "7",\
+		"4": "",\
+		"5": "",\
+		"6": "",\
+		"7": "",\
+		"8": "",\
+		"id": "1_2"\
+	}, {\
+		"0": "Books",\
+		"1": "Two authors",\
+		"2": "",\
+		"3": "1",\
+		"4": "",\
+		"5": "",\
+		"6": "",\
+		"7": "",\
+		"8": "",\
+		"id": "0_10"\
+	}, {\
+		"0": "Articles & Papers",\
+		"1": "Two authors",\
+		"2": "",\
+		"3": "2",\
+		"4": "",\
+		"5": "",\
+		"6": "",\
+		"7": "",\
+		"8": "",\
+		"id": "2_1"\
+	}, {\
+		"0": "Authors",\
+		"1": "Three till five authors",\
+		"2": "Books, Articles & Papers",\
+		"3": "7",\
+		"4": "",\
+		"5": "Anderson, Sweeney and Williams<span style=\"mso-spacerun:yes\"></span>",\
+		"6": "Anderson, D. R., Sweeney, D. J., &amp; Williams, T. A.. <font class=\"font6\">Quantitative methods for business</font><font class=\"font0\">. Mason, OH: Thomson.</font>",\
+		"7": "",\
+		"8": "",\
+		"id": "1_3"\
+	}, {\
+		"0": "Books",\
+		"1": "Three till five authors",\
+		"2": "",\
+		"3": "1",\
+		"4": "",\
+		"5": "Anderson, Sweeney and Williams<span style=\"mso-spacerun:yes\"></span>",\
+		"6": "Anderson, D. R., Sweeney, D. J., &amp; Williams, T. A.. <font class=\"font6\">Quantitative methods for business</font><font class=\"font0\">. Mason, OH: Thomson.</font>",\
+		"7": "",\
+		"8": "",\
+		"id": "0_11"\
+	}, {\
+		"0": "Articles & Papers",\
+		"1": "Three till five authors",\
+		"2": "",\
+		"3": "2",\
+		"4": "",\
+		"5": "Anderson, Sweeney and Williams <span style=\"mso-spacerun:yes\"></span>",\
+		"6": "Anderson, D. R., Sweeney, D. J., &amp; Williams, T. A.. <font class=\"font15\">Quantitative methods for business</font><font class=\"font7\">. Mason, OH: Thomson.</font>",\
+		"7": "",\
+		"8": "",\
+		"id": "2_2"\
+	}, {\
+		"0": "Authors",\
+		"1": "Six or more authors",\
+		"2": "Books, Articles & Papers",\
+		"3": "7",\
+		"4": "",\
+		"5": "Brown et al.<span style=\"mso-spacerun:yes\"></span>",\
+		"6": "Brown, D., Harper, H., Frei, M., Ingham, M., Otter, G. Raskin, J., � Delay, A. . <font class=\"font6\">Basic writing skills</font><font class=\"font0\">. Toronto, Canada: McGraw-Hill.</font>",\
+		"7": "",\
+		"8": "",\
+		"id": "1_4"\
+	}, {\
+		"0": "Books",\
+		"1": "Six or more authors",\
+		"2": "",\
+		"3": "1",\
+		"4": "",\
+		"5": "Brown et al. <span style=\"mso-spacerun:yes\"></span>",\
+		"6": "Brown, D., Harper, H., Frei, M., Ingham, M., Otter, G. Raskin, J., � Delay, A. . <font class=\"font6\">Basic writing skills</font><font class=\"font0\">. Toronto, Canada: McGraw-Hill.</font>",\
+		"7": "",\
+		"8": "",\
+		"id": "0_12"\
+	}, {\
+		"0": "Articles & Papers",\
+		"1": "Six or more authors",\
+		"2": "",\
+		"3": "2",\
+		"4": "",\
+		"5": "Brown et al. <span style=\"mso-spacerun:yes\"></span>",\
+		"6": "Brown, D., Harper, H., Frei, M., Ingham, M., Otter, G. Raskin, J., � Delay, A. . <font class=\"font6\">Basic writing skills</font><font class=\"font0\">. Toronto, Canada: McGraw-Hill.</font>",\
+		"7": "",\
+		"8": "",\
+		"id": "2_3"\
+	}, {\
+		"0": "Authors",\
+		"1": "Authors with the same last name",\
+		"2": "Books, Articles &; Papers",\
+		"3": "7",\
+		"4": "",\
+		"5": "(P. M. Anderson, 2003, p. xx)<br> <br> ",\
+		"6": "Anderson, J. B.. <font class=\"font6\">Digital transmission engineering</font><font class=\"font0\">. Piscataway, NJ: IEEE Press.<br> Anderson, P. M.. </font><font class=\"font6\">Analysis of faulted power systems</font><font class=\"font0\">. Piscataway, NJ: IEEE Press.<span style=\"mso-spacerun:yes\"> </span><br> </font>",\
+		"7": "",\
+		"8": "",\
+		"id": "1_5"\
+	}, {\
+		"0": "Books",\
+		"1": "Authors with the same last name",\
+		"2": "",\
+		"3": "1",\
+		"4": "",\
+		"5": "(P. M. Anderson, 2003, p. xx)<br> <br> ",\
+		"6": "Anderson, J. B.. <font class=\"font6\">Digital transmission engineering</font><font class=\"font0\">. Piscataway, NJ: IEEE Press.<br> Anderson, P. M.. </font><font class=\"font6\">Analysis of faulted power systems</font><font class=\"font0\">. Piscataway, NJ: IEEE Press.<span style=\"mso-spacerun:yes\"> </span><br> </font>",\
+		"7": "",\
+		"8": "",\
+		"id": "0_13"\
+	}, {\
+		"0": "Articles & Papers",\
+		"1": "Authors with the same last name",\
+		"2": "",\
+		"3": "2",\
+		"4": "",\
+		"5": "(P. M. Anderson, 2003, p. xx)<br> <br> ",\
+		"6": "Anderson, J. B.. <font class=\"font15\">Digital transmission engineering</font><font class=\"font7\">. Piscataway, NJ: IEEE Press.<br> Anderson, P. M.. </font><font class=\"font15\">Analysis of faulted power systems</font><font class=\"font7\">. Piscataway, NJ: IEEE Press.<span style=\"mso-spacerun:yes\"> </span><br> </font>",\
+		"7": "",\
+		"8": "",\
+		"id": "2_4"\
+	}, {\
+		"0": "Authors",\
+		"1": "Multiple works by the same author",\
+		"2": "Books, Articles & Papers",\
+		"3": "7",\
+		"4": "",\
+		"5": "(Smith, 2005, p. xx; 2007, p. yy)<span style=\"mso-spacerun:yes\"></span>",\
+		"6": "Smith, P.. <font class=\"font6\">Piping Materials Guide</font><font class=\"font0\">. Oxford, England: Elsevier.<br> Smith, P.. </font><font class=\"font6\">Process piping design handbook: fundamentals of piping design</font><font class=\"font0\">. Houston, TX: Gulf.<br> </font>",\
+		"7": "",\
+		"8": "",\
+		"id": "1_6"\
+	}, {\
+		"0": "Books",\
+		"1": "Multiple works by the same author",\
+		"2": "",\
+		"3": "1",\
+		"4": "",\
+		"5": "(Smith, 2005, p. xx; 2007, p. yy)<span style=\"mso-spacerun:yes\"></span>",\
+		"6": "Smith, P.. <font class=\"font6\">Piping Materials Guide</font><font class=\"font0\">. Oxford, England: Elsevier.<br> Smith, P.. </font><font class=\"font6\">Process piping design handbook: fundamentals of piping design</font><font class=\"font0\">. Houston, TX: Gulf.<br> </font>",\
+		"7": "",\
+		"8": "",\
+		"id": "0_14"\
+	}, {\
+		"0": "Articles & Papers",\
+		"1": "Multiple works by the same author",\
+		"2": "",\
+		"3": "2",\
+		"4": "",\
+		"5": "(Smith, 2005, p. xx; 2007, p. yy)<span style=\"mso-spacerun:yes\"></span>",\
+		"6": "Smith, P.. <font class=\"font15\">Piping Materials Guide</font><font class=\"font7\">. Oxford, England: Elsevier.<br> Smith, P.. </font><font class=\"font15\">Process piping design handbook: fundamentals of piping design</font><font class=\"font7\">. Houston, TX: Gulf.<br> </font>",\
+		"7": "",\
+		"8": "",\
+		"id": "2_5"\
+	}, {\
+		"0": "Authors",\
+		"1": "Multiple works by the same author in the same year",\
+		"2": "Books, Articles & Papers",\
+		"3": "7",\
+		"4": "",\
+		"5": "(Napier, 1993a, p. xx; 1993b, p. yy) �",\
+		"6": "Napier, A..<font class=\"font6\"> Fatal storm</font><font class=\"font0\">. Sydney, Australia: Allen &amp; Unwin. <br> Napier, A.. </font><font class=\"font6\">Survival at sea</font><font class=\"font0\">. Sydney, Australia: Allen &amp; Unwin.<br> </font>",\
+		"7": "",\
+		"8": "",\
+		"id": "1_7"\
+	}, {\
+		"0": "Books",\
+		"1": "Multiple works by the same author in the same year",\
+		"2": "",\
+		"3": "1",\
+		"4": "",\
+		"5": "(Napier, 1993a, p. xx; 1993b, p. yy) �",\
+		"6": "Napier, A..<font class=\"font6\"> Fatal storm</font><font class=\"font0\">. Sydney, Australia: Allen &amp; Unwin. <br> Napier, A.. </font><font class=\"font6\">Survival at sea</font><font class=\"font0\">. Sydney, Australia: Allen &amp; Unwin.<br> </font>",\
+		"7": "",\
+		"8": "",\
+		"id": "0_15"\
+	}, {\
+		"0": "Articles & Papers",\
+		"1": "Multiple works by the same author in the same year",\
+		"2": "",\
+		"3": "",\
+		"4": "",\
+		"5": "(Napier, 1993a, p. xx; 1993b, p. yy) �",\
+		"6": "Napier, A..<font class=\"font15\"> Fatal storm</font><font class=\"font7\">. Sydney, Australia: Allen &amp; Unwin. <br> Napier, A.. </font><font class=\"font15\">Survival at sea</font><font class=\"font7\">. Sydney, Australia: Allen &amp; Unwin.<br> </font>",\
+		"7": "",\
+		"8": "",\
+		"id": "2_6"\
+	}, {\
+		"0": "Articles & Papers",\
+		"1": "Journal article",\
+		"2": "",\
+		"3": "2",\
+		"4": "",\
+		"5": "(Cutler, 2011)",\
+		"6": "Cutler, A. D.. High-Frequency Pulsed Combustion Actuator Experiments. <font class=\"font6\">AIAA Journal</font><font class=\"font0\">, </font><font class=\"font6\">49</font><font class=\"font0\">(9), 1943-1950.</font>",\
+		"7": "",\
+		"8": "",\
+		"id": "2_7"\
+	}, {\
+		"0": "Articles & Papers",\
+		"1": "Journal article with DOI",\
+		"2": "",\
+		"3": "2",\
+		"4": "",\
+		"5": "",\
+		"6": "",\
+		"7": "",\
+		"8": "",\
+		"id": "2_8"\
+	}, {\
+		"0": "Articles & Papers",\
+		"1": "Newspaper article",\
+		"2": "",\
+		"3": "2",\
+		"4": "",\
+		"5": "",\
+		"6": "",\
+		"7": "",\
+		"8": "",\
+		"id": "2_9"\
+	}, {\
+		"0": "Articles & Papers",\
+		"1": "Online newspaper article",\
+		"2": "",\
+		"3": "2",\
+		"4": "",\
+		"5": "",\
+		"6": "",\
+		"7": "",\
+		"8": "",\
+		"id": "2_10"\
+	}, {\
+		"0": "Reports",\
+		"1": "Printed report",\
+		"2": "",\
+		"3": "3",\
+		"4": "",\
+		"5": "",\
+		"6": "",\
+		"7": "",\
+		"8": "",\
+		"id": "3_1"\
+	}, {\
+		"0": "Reports",\
+		"1": "Online report",\
+		"2": "",\
+		"3": "3",\
+		"4": "",\
+		"5": "It is stated by Van der Wel and Bergen �",\
+		"6": "Van der Wel, N., &amp; Bergen, V. H. S.. <font class=\"font6\">Plattelandsvernieuwing en cultuur: interactieve planontwikkeling </font><font class=\"font0\">(NRLO-rapport nr. 2000/8). Retrieved from Innovatie Agro &amp; Natuur website: http://publications.tno.nl/publication/34614835/QuPGHi/NRLO-2000-08.pdf</font>",\
+		"7": "",\
+		"8": "",\
+		"id": "3_2"\
+	}, {\
+		"0": "On the internet/Social media",\
+		"1": "Page on the internet",\
+		"2": "",\
+		"3": "4",\
+		"4": "",\
+		"5": "",\
+		"6": "",\
+		"7": "",\
+		"8": "",\
+		"id": "5_0"\
+	}, {\
+		"0": "On the internet/Social media",\
+		"1": "Company on the internet",\
+		"2": "",\
+		"3": "4",\
+		"4": "",\
+		"5": "On the website of Boei �.",\
+		"6": "Boei.. Project graansilo. Retrieved May 23, 2017 from http://www.boei.nl/projecten/graansilo-wehl",\
+		"7": "",\
+		"8": "",\
+		"id": "5_1"\
+	}, {\
+		"0": "On the internet/Social media",\
+		"1": "Entry online encyclopedia",\
+		"2": "",\
+		"3": "4",\
+		"4": "",\
+		"5": "",\
+		"6": "",\
+		"7": "",\
+		"8": "",\
+		"id": "5_2"\
+	}, {\
+		"0": "On the internet/Social media",\
+		"1": "Podcast",\
+		"2": "",\
+		"3": "4",\
+		"4": "",\
+		"5": "",\
+		"6": "",\
+		"7": "",\
+		"8": "",\
+		"id": "5_3"\
+	}, {\
+		"0": "On the internet/Social media",\
+		"1": "YouTube",\
+		"2": "",\
+		"3": "4",\
+		"4": "",\
+		"5": "",\
+		"6": "",\
+		"7": "",\
+		"8": "",\
+		"id": "5_4"\
+	}, {\
+		"0": "On the internet/Social media",\
+		"1": "Web log post/comment",\
+		"2": "",\
+		"3": "4",\
+		"4": "",\
+		"5": "",\
+		"6": "",\
+		"7": "",\
+		"8": "",\
+		"id": "5_5"\
+	}, {\
+		"0": "Patents",\
+		"1": "Patents",\
+		"2": "",\
+		"3": "5",\
+		"4": "",\
+		"5": "..� the invention by Bellusci and Janssen is an example of .�.",\
+		"6": "Bellusci, G., &amp; Janssen, G. J. M.. <font class=\"font6\">WO 2010/131966 A1</font><font class=\"font0\">. Geneva, Switzerland: World Intellectual Property Organization.</font>",\
+		"7": "",\
+		"8": "",\
+		"id": "7_0"\
+	}, {\
+		"0": "Standards",\
+		"1": "Standards",\
+		"2": "",\
+		"3": "6",\
+		"4": "",\
+		"5": "�.. In standard NEN 6578:2011 �..",\
+		"6": "Nederlands Normalisatie Instituut.. <font class=\"font6\">Water - Potentiometrische bepaling van het totale gehalte aan totaal fluoride NEN 6578:2011</font><font class=\"font0\">. Delft, The Netherlands: Author.</font>",\
+		"7": "",\
+		"8": "",\
+		"id": "8_0"\
+	}, {\
+		"0": "Illustrations & Maps",\
+		"1": "Image in a book",\
+		"2": "Books",\
+		"3": "8",\
+		"4": "",\
+		"5": "The image �Local scour at piers as illustrated by model experiment and pir failure� is �",\
+		"6": "Transportation Association of Canada.. <font class=\"font6\">Guide to bridge hydraulics</font><font class=\"font0\"><span style=\"mso-spacerun:yes\"></span>(2nd ed.). London, England: Telford.</font>",\
+		"7": "Figure X. Local scour at piers as illustrated by model experiment and pir failure. From <font class=\"font6\">Guide to bridge hydraulics </font><font class=\"font0\">(2nd ed., p. 68), by Transportation Association of Canada, 2004, London, England: Telford. Copyright 2004 by Transportation Association of Canada.</font>",\
+		"8": "",\
+		"id": "9_0"\
+	}, {\
+		"0": "Books",\
+		"1": "Image in a book",\
+		"2": "",\
+		"3": "1",\
+		"4": "",\
+		"5": "The image �Local scour at piers as illustrated by model experiment and pir failure� is �",\
+		"6": "Transportation Association of Canada.. <font class=\"font6\">Guide to bridge hydraulics</font><font class=\"font0\"><span style=\"mso-spacerun:yes\"></span>(2nd ed.). London, England: Telford.</font>",\
+		"7": "Figure X. Local scour at piers as illustrated by model experiment and pir failure. From <font class=\"font6\">Guide to bridge hydraulics </font><font class=\"font0\">(2nd ed., p. 68), by Transportation Association of Canada, 2004, London, England: Telford. Copyright 2004 by Transportation Association of Canada.</font>",\
+		"8": "",\
+		"id": "0_16"\
+	}, {\
+		"0": "Illustrations & Maps",\
+		"1": "Image on a website",\
+		"2": "On the internet/Social media",\
+		"3": "8",\
+		"4": "",\
+		"5": "As shown in figure 7, Houston is one of the cities In the USA with a light rail system�",\
+		"6": "Haase, M.. Light rail Houston [Photograph]. Retrieved from https://commons.wikimedia.org/wiki/File:Light_Rail_Houston.jpg",\
+		"7": "Figure X: Light rail Houston. From �<font class=\"font6\">Wikimedia Commons,</font><font class=\"font0\">� by M. Haase, 2006 . Licensed under CC BY 2.5</font>",\
+		"8": "",\
+		"id": "9_1"\
+	}, {\
+		"0": "On the internet/Social media",\
+		"1": "Image on a website",\
+		"2": "",\
+		"3": "4",\
+		"4": "",\
+		"5": "As shown in figure 7, Houston is one of the cities In the USA with a light rail system�",\
+		"6": "Haase, M.. Light rail Houston [Photograph]. Retrieved from https://commons.wikimedia.org/wiki/File:Light_Rail_Houston.jpg",\
+		"7": "Figure X: Light rail Houston. From �<font class=\"font6\">Wikimedia Commons,</font><font class=\"font0\">� by M. Haase, 2006 . Licensed under CC BY 2.5</font>",\
+		"8": "",\
+		"id": "10_0"\
+	}, {\
+		"0": "Illustrations & Maps",\
+		"1": "Online maps",\
+		"2": "",\
+		"3": "8",\
+		"4": "",\
+		"5": "",\
+		"6": "",\
+		"7": "",\
+		"8": "",\
+		"id": "9_2"\
+	}, {\
+		"0": "Secondary sources",\
+		"1": "Book",\
+		"2": "Books",\
+		"3": "9",\
+		"4": "",\
+		"5": "",\
+		"6": "",\
+		"7": "",\
+		"8": "",\
+		"id": "11_0"\
+	}, {\
+		"0": "Books",\
+		"1": "Secondary sources",\
+		"2": "",\
+		"3": "1",\
+		"4": "",\
+		"5": "",\
+		"6": "",\
+		"7": "",\
+		"8": "",\
+		"id": "0_18"\
+	}, {\
+		"0": "Unpublished work",\
+		"1": "Paper book",\
+		"2": "Books",\
+		"3": "10",\
+		"4": "",\
+		"5": "Blackwell and Conrod",\
+		"6": "Blackwell, E., &amp; Conrod, P. J.. <font class=\"font6\">A five-dimesional measure of drinking </font><font class=\"font0\">motives. Unpublished manuscript, Department of Psychology, University of British Colombia, Vancouver, Canada.</font>",\
+		"7": "",\
+		"8": "",\
+		"id": "12_0"\
+	}, {\
+		"0": "Books",\
+		"1": "Paper book",\
+		"2": "",\
+		"3": "1",\
+		"4": "",\
+		"5": "Blackwell and Conrod",\
+		"6": "Blackwell, E., &amp; Conrod, P. J.. <font class=\"font6\">A five-dimesional measure of drinking </font><font class=\"font0\">motives. Unpublished manuscript, Department of Psychology, University of British Colombia, Vancouver, Canada.</font>",\
+		"7": "",\
+		"8": "",\
+		"id": "0_19"\
+	}, {\
+		"0": "Unpublished work",\
+		"1": "Situation sketch",\
+		"2": "",\
+		"3": "10",\
+		"4": "",\
+		"5": "Based on Jansen�.",\
+		"6": "Jansen, H. H.. <font class=\"font6\">Stationsgebied Rotterdam</font><font class=\"font0\"><span style=\"mso-spacerun:yes\"></span>[Situatieschets]. Unpublished, Department of Architecture, University of Technology, Delft, The Netherlands.</font>",\
+		"7": "",\
+		"8": "",\
+		"id": "12_1"\
+	}, {\
+		"0": "Illustrations & Maps",\
+		"1": "Situation sketch",\
+		"2": "",\
+		"3": "8",\
+		"4": "",\
+		"5": "Based on Jansen �.",\
+		"6": "Jansen, H. H. . Stationsgebied Rotterdam [Situatieschets]. Unpublished, Department of Architecture, University of Technology, Delft, The Netherlands.",\
+		"7": "",\
+		"8": "",\
+		"id": "13_0"\
+	}]\
+}';
 </script>
 
 <script>
@@ -267,8 +1039,11 @@
                    	data = event.target.result;
 					apaContent = toJSON(data);
 					addStyle(data);
+					//showSortedHeadingOptions(apaContent);
 					showHeadingOptions(apaContent);
+					//showSortedTypeOptions(apaContent);
 					showTypeOptions(apaContent);
+					showAppliesToOptions(apaContent);
 					showExamples(apaContent);
 					$('#select-heading').focus();
 				}
@@ -375,7 +1150,8 @@
   by et al.</td>\
   <td></td>\
  </tr>"
-	
+
+
 	
 	function getDummyFile() {
 		/*
@@ -397,6 +1173,7 @@
 				showHeadingOptions(apaContent);
 				showTypeOptions(apaContent);
 				showExamples(apaContent);
+				showAppliesToOptions(apaContent);
 				$('#select-heading').focus();
 				console.log(JSON.stringify(apaContent));
 			}
@@ -407,6 +1184,77 @@
 	}
 	//getDummyFile();
 	// end get dummy file for testing purposes
+	
+	// start getting json Dummy for testing purposes
+	function getJsonDummy() {
+		try {
+			//console.log(jsonDummy.replace(/\t/g,"").replace(/\n/g,"").replace(/\\"/g,"\'").replace(/="/g,"='").replace(/">/g,"'>"));
+			apaContent = JSON.parse(jsonDummy.replace(/\t/g,"").replace(/\n/g,"").replace(/\\"/g,"\'").replace(/="/g,"='").replace(/">/g,"'>"));
+			addStyle(apaContent);
+			//showSortedHeadingOptions(apaContent);
+			showHeadingOptions(apaContent);
+			//showSortedTypeOptions(apaContent);
+			showTypeOptions(apaContent);
+			showAppliesToOptions(apaContent);
+			showExamples(apaContent);
+			$('#select-heading').focus();
+		}
+		catch(err) {
+			console.log(err);
+		}
+	}
+	//getJsonDummy();
+	// end getting json Dummy for testing purposes
+	
+	// start showing the combination options
+	function showAppliesToOptions(apaContent) {
+		try {
+			//$('#combinationoptions').html("");
+			
+			var appliesToOptions = '<select id="select-applies_to" size="6"><br>';
+			var appliesTolist = {};
+			//var appliesToKey = $('#headingoptions :selected').val();
+			var appliesToText = $('#headingoptions :selected').text();
+			//console.log(appliesToKey);
+			var appliesToColumn = nameToKey(apaContent.header, "Combines with");
+			//console.log(typeof(appliesToColumn));
+			// maak lijst van alle 3e waarden en zoek daarbij naar 'Reports'
+			$.each(apaContent.content, function(cIndex, cValue){
+				key = cValue.id
+				//console.log('key' + JSON.stringify(key));    // geeft de heading - id
+				//console.log(cValue[appliesToColumn] +' ' + appliesToText);
+				
+				$.each(cValue[appliesToColumn].split(','), function(aIndex, aValue) {
+					console.log(aIndex + ' ' + aValue);
+					if (aValue.replace(/\s+/, "") == appliesToText.replace(/\s+/, "")) {
+						console.log(aIndex + ' ' + aValue);
+						appliesTolist[key] = cValue[nameToKey(apaContent.header, "Heading")] + ' -> ' + cValue[nameToKey(apaContent.header, "Types")];
+					}
+				});
+				/*
+				for (appliesToHeading in cValue[appliesToColumn].split(',')) {
+					console.log(appliesToHeading +' aaa ' + appliesToText);
+					if (appliesToHeading == appliesToText) {
+						appliesTolist[appliesToText] = cValue[nameToKey(apaContent.header, "Heading")] + ' -> ' + cValue[nameToKey(apaContent.header, "Types")];
+					}
+				}
+				*/
+			});
+			$.each(appliesTolist, function(index, value) {
+				var selected = "";
+				if (index == 0) {							// first element
+					selected = " selected ";
+				}
+				appliesToOptions += '<option value="' + index + '"' + selected + '>' + value + '</option><br>';
+			});
+			appliesToOptions += '</select><br>';
+			$('#combinationoptions').html(appliesToOptions);
+		}
+		catch(err) {
+			console.log(err);
+		}
+	} 
+	// end showing the heading options so users can pick a value for getting a corrsponding type-list
 
 	// start showing the heading options so users can pick a value for getting a corrsponding type-list
 	function showHeadingOptions(apaContent) {
@@ -436,6 +1284,36 @@
 		}
 	} 
 	// end showing the heading options so users can pick a value for getting a corrsponding type-list
+
+	// start showing the sorted heading options so users can pick a value for getting a corrsponding type-list
+	function showSortedHeadingOptions(apaContent) {
+		try {
+			var headingoptions = '<select id="select-heading" size="6"><br>';  // options for selecting a list of type-options
+			var headinglist = {};
+			$.each(apaContent.content, function(cIndex, cValue){
+				var key = cValue["3"] - 1;					// offset = 0
+				$.each(cValue, function(index, value){
+					if (index == 0) {						// 0 = headings
+						headinglist[key] = value;
+					}
+				});
+			});
+			console.log('--------' + JSON.stringify(headinglist));
+			$.each(headinglist, function(index, value){
+				var selected = "";
+				if (index == 0) {							// first element
+					selected = " selected ";
+				}
+				headingoptions += '<option value="' + index + '"' + selected + '>' + value + '</option><br>';
+			});
+			headingoptions += '</select><br>';
+			$('#headingoptions').html(headingoptions);
+		}
+		catch(err) {
+			console.log(err);
+		}
+	} 
+	// end showing the sorted heading options so users can pick a value for getting a corrsponding type-list
 
 	// start showing the type options so users can pick a value for getting a corresponding content
 	function showTypeOptions(apaContent) {
@@ -470,20 +1348,56 @@
 	} 
 	// end showing the type options so users can pick a value for getting a corresponding content
 
+	// start showing the sorted type options so users can pick a value for getting a corresponding content
+	function showSortedTypeOptions(apaContent) {
+		try {
+			var typeoptions = '<select id="select-type" size="6"><br>'     // options for a type belonging to the selected header-option
+			var typelist = {};
+			$.each(apaContent.content, function(cIndex, cValue){
+				var selectedHeading = $('#headingoptions :selected').val();
+				var key = cValue["4"] - 1;						// offset = 0
+				var headingKey = cValue.id.split("_")[0];
+				$.each(cValue, function(index, value){
+					if (headingKey == selectedHeading) {
+						if (index == 1) {						// 1 = type
+							typelist[key] = value;
+						}
+					}
+				});
+			});
+			console.log('=======' + JSON.stringify(typelist));
+			$.each(typelist, function(index, value){
+				var selected = "";
+				if (index == "0") {					// first element
+					selected = " selected ";
+				}
+				typeoptions += '<option value="' + index + '"' + selected + '>' + value + '</option><br>';
+			});
+			typeoptions += '</select><br>';
+			$('#typeoptions').html(typeoptions);
+		}
+		catch(err) {
+			console.log(err);
+		}
+	} 
+	// end showing the sorted type options so users can pick a value for getting a corresponding content
+
 	// start showing the examples
-	function showExamples(apaContent) {
+	function showExamples(apaContent, recordId) {
 		try {
 			$.each(apaContent.content, function(cIndex, cValue){
-				var recordId = $('#typeoptions :selected').val();
 				if (cValue.id == recordId) {
 					$.each(cValue, function(index, value){
-						if (index == 2) {						// 2 = In-text example
+						if (index == nameToKey(apaContent.header, "In-tekst example")) {			// In-text example
 							$('#in-text-example').html(value);
 						}
-						if (index == 3) {						// 3 = Reference-list example
+						if (index == nameToKey(apaContent.header, "Reference list example")) {		// Reference-list example
 							$('#reference-list-example').html(value);
 						}
-						if (index == 4) {						// 4 = Remark
+						if (index == nameToKey(apaContent.header, "Figure heading example")) {		// Figure heading example
+							$('#figure-heading-example').html(value);
+						}
+						if (index == nameToKey(apaContent.header, "Remark")) {						// Remark
 							$('#remark').html(value);
 						}
 					});
@@ -552,11 +1466,21 @@
 		});
 		$('#headingoptions').off('change').on('change', function(){
 			showTypeOptions(apaContent);
-			showExamples(apaContent);
+			var recordId = $('#typeoptions :selected').val();
+			showExamples(apaContent, recordId);
+			showAppliesToOptions(apaContent);
 			$('#select-type').focus();
 		});
 		$('#typeoptions').off('change').on('change', function(){
-			showExamples(apaContent);
+			var recordId = $('#typeoptions :selected').val();
+			showExamples(apaContent, recordId);
+			showAppliesToOptions(apaContent);
+		});
+		$('#combinationoptions').off('click').on('click', function(){
+			var recordId = $('#combinationoptions :selected').val();
+			showExamples(apaContent, recordId);
+			// ?? Hier nog de heading en type weer aanplassen zodat het circulair wordt ??
+			//showAppliesToOptions(apaContent);
 		});
 	};
 
