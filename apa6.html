@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-    <!-- <link rel="icon" href="favicon.ico" sizes="16x16" type="image/ico">
+    <!--<link rel="icon" href="favicon.ico" sizes="16x16" type="image/ico">
 	-->
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
@@ -45,26 +45,27 @@
 	#toggleExample:hover {
 		cursor: pointer;
 	}
-	
+	.container {
+		max-width: 800px;
+	}
+	.example {
+		max-width: 640px;
+	}
 	</style>
 </head>
 <body>
 	<div id="data-style"></div>
 	<div class="container">
 		<div class="row bg-brand">
-			<div class="col-xs-3"><img src="https://www.library.tudelft.nl/fileadmin/templates/images/tudelft-logo-transparant-275x80.png" height="35" width="70"></div>
+			<div class="col-xs-3"><img src="http://vkc.library.tudelft.nl/fileadmin/templates/images/tudelft-logo-transparant-275x80.png" height="35" width="70"></div>
 			<div class="col-xs-9 h2 white">APA6 Citation style</div>
 		</div>
 		<div class="row">
 			<div class="col-xs-10">
-				<!--
 				<div class="row">
-					<div class="col-xs-offset-2 col-xs-3 glyphicon glyphicon-arrow-up"></div>
-					<div class="col-xs-offset-1 col-xs-3 glyphicon glyphicon-arrow-up"></div>
-				</div>
-				-->
-				<div class="row">
-					<div class="col-xs-12">boven</div>
+					<div id="headingoptions-title" class="col-xs-offset-1 col-xs-3"><h3>Heading</h3></div>
+					<div id="typeoptions-title" class="col-xs-offset-1 col-xs-3"><h3>Type</h3></div>
+					<div id="combinationoptions-title" class="col-xs-offset-1 col-xs-3"><h3>See also</h3></div>
 				</div> 
 				<div class="row">
 					<div id="headingoptions" class="col-xs-offset-1 col-xs-3">heading list</div>
@@ -72,20 +73,13 @@
 					<div id="combinationoptions" class="col-xs-offset-1 col-xs-3">combination list</div>
 				</div>
 				<div class="row">
-					<div class="col-xs-12">onder</div>
+					<div class="col-xs-12"><br></div>
 				</div> 
-				<!--
-				<div class="row">
-					<div class="col-xs-offset-2 col-xs-3 glyphicon glyphicon-arrow-down"></div>
-					<div class="col-xs-offset-1 col-xs-3 glyphicon glyphicon-arrow-down"></div>
-				</div>
-				-->
 			</div>
 		</div>
-		JSON is sorted, wel even controleren of alles goed is en zorg voor een default selected item
 		<div class="row">
 			<div class="col-xs-12">
-				<div class="panel panel-info">
+				<div class="panel panel-info example">
 					<div class="panel-heading panel-title">In-text example</div>
 					<div id="in-text-example" class="panel-body">Hier het voorbeeld</div>
 				</div>
@@ -93,7 +87,7 @@
 		</div>
 		<div class="row">
 			<div class="col-xs-12">
-				<div class="panel panel-info">
+				<div class="panel panel-info example">
 					<div class="panel-heading panel-title">Reference list example</div>
 					<div id="reference-list-example" class="panel-body">Hier het voorbeeld</div>
 				</div>
@@ -101,7 +95,7 @@
 		</div>
 		<div class="row">
 			<div class="col-xs-12">
-				<div class="panel panel-info">
+				<div class="panel panel-info example">
 					<div class="panel-heading panel-title">Figure example</div>
 					<div id="figure-heading-example" class="panel-body">Hier het voorbeeld</div>
 				</div>
@@ -109,7 +103,7 @@
 		</div>
 		<div class="row">
 			<div class="col-xs-12">
-				<div class="panel panel-info">
+				<div class="panel panel-info example">
 					<div class="panel-heading panel-title">Remark</div>
 					<div id="remark" class="panel-body">Hier het voorbeeld</div>
 				</div>
@@ -154,70 +148,105 @@
 
 <script>
 	// global data
-	var apaContent = "";
+	var apaContent = "";		// holds the apaContent
+	var referenceHeight = 0;	// holds and keeps the first measured height of the reference example field, see $(document).ready() 
+	var prevHeight = 0;			// holds the height of the reference example field, see wrapReferenceExample
 </script>
 
 <script>
 	function getSortedContentWithChangedId(data) {
-		/*
-	"content": [{\
-		"0": "Books",\
-		"1": "Paper book",\
-		"2": "",\
-		"3": "1",\
-		"4": "1",\
-		"5": "Dorf<span style=\'mso-spacerun:yes\'></span>",\
-		"6": "Dorf, R. C.. <font class=\"font10\">The electrical engineering handbook</font><font class=\"font9\"><span style=\"mso-spacerun:yes\"></span>(3rd ed.). Boca Raton, FL: CRC/Taylor &amp; Francis.<span style=\"mso-spacerun:yes\"></span></font>",\
-		"7": "",\
-		"8": "Place information about editions, volume numbers, and page numbers in parentheses with the period after the parentheses:. or.",\
-		"id": "0_0"\
-	}, {\
-		"0": "Books",\
-		"1": "Electronic book with doi",\
-		"2": "",\
-		"3": "1",\
-		"4": "3",\
-		"5": "Ardia<span style=\"mso-spacerun:yes\"> </span>(2008, p. xx)<span style=\"mso-spacerun:yes\"></span>",\
-		"6": "Ardia, D.. <font class=\"font6\">Financial risk management with Bayesian estimation of GARCH models: theory and applications</font><font class=\"font0\">. doi:10.1007/978-3-540-78657-3</font>",\
-		"7": "",\
-		"8": "For books or chapters available online, the electronic retrieval statement takes the place of publisher location and name.",\
-		"id": "0_1"\
-	}, {\
-		
-		*/
-		
+		var headingKey = nameToKey(data.header, "Heading");
+		var typesKey = nameToKey(data.header, "Types");
 		var headingRankingKey = nameToKey(data.header, "Ranking headings");
 		var typeRankingKey = nameToKey(data.header, "Ranking types");
+		var delimiter = "-=avdk2017=-";
 		var content = [];
 		var sortingArray = [];
 		
-		// ? value.id hier opnieuw bepalen ? 
+		var headingArray = [];
+        var typesPerHeading = {};
+		var typesArray = [];
+		var uniqueSortedTypesPerHeading = {};
 		
-		
-		
+		// start sorting on ranking
 		$.each($(data.content), function(key, value) {
-			var sortKey = pad(headingRankingKey, 3) + "-" + pad(typeRankingKey, 3) + "-" + value.id;
+			var sortKey = pad(value[headingRankingKey], 3) + delimiter + pad(value[typeRankingKey], 3) + delimiter + value[headingKey] + delimiter + value[typesKey];
 			sortingArray.push(sortKey);
 		});
-		//console.log(headingRankingKey + ' ' + typeRankingKey + ' ' +JSON.stringify(sortingArray));
 		
+		// ... is a spread operator
 		sortingArray = [...sortingArray].sort((a, b) => a.localeCompare(b));
+		// end sorting on ranking
+
+		var previousHeading = '';
 		for (i = 0; i < sortingArray.length; i++) {
-			var sortedId = sortingArray[i].split("-")[2];
+			var myHeading = sortingArray[i].split(delimiter)[2];
+			headingArray.push(myHeading);
+			if (myHeading != previousHeading) {
+				typesPerHeading[myHeading] = [];
+				previousHeading = myHeading;			
+			}
+			typesPerHeading[myHeading].push(sortingArray[i].split(delimiter)[2] + delimiter + sortingArray[i].split(delimiter)[3]);
+		};
+
+		var uniqueSortedHeadings = [...new Set(headingArray)];															// unique heading
+		
+		for (i = 0; i < uniqueSortedHeadings.length; i++) {
+			var myHeading = uniqueSortedHeadings[i];
+			uniqueSortedTypesPerHeading[myHeading] = [...new Set(typesPerHeading[myHeading])];							// unique sorting type per heading
+		}
+		
+		// start id hier opnieuw bepalen
+		var idHeading = "";
+		var idTypes = "";
+		$.each($(data.content), function(key, value) {
+			idHeading = uniqueSortedHeadings.indexOf(value[headingKey]);
+			idTypes = uniqueSortedTypesPerHeading[value[headingKey]].indexOf( value[headingKey] + delimiter + value[typesKey] );
+			data.content[key].id = pad(idHeading, 3) + "_" + pad(idTypes, 3);
+		});
+		// end id hier opnieuw bepalen
+
+		// start sort again, but now on id
+		sortingArray = [];
+		$.each($(data.content), function(key, value) {
+			sortingArray.push(value.id);
+		});
+		
+		// ... is a spread operator
+		sortingArray = [...sortingArray].sort((a, b) => a.localeCompare(b));
+		// end sort again, but now on id
+		
+		var content = [];
+		for (i = 0; i < sortingArray.length; i++) {
 			$.each($(data.content), function(key, value) {
-				if (value.id == sortedId) {
-					//console.log(value);
+				if (sortingArray[i] == value.id) {
 					content.push(value);
 				}
 			});
-		}
-		data.content = content;
+		};
+		data.content = content;	
 		return data;
 	}
 </script>
 
 <script>
-	// 
+	function filterInput(line) {
+		var myLine = line;
+		myLine = myLine.replace(/^\s+/g, "");		// remove 2 or more space at the beginning of a line
+		myLine = myLine.replace(/\s+/g, " ");		// replace 2 or more space with 1 space 
+		//myLine = myLine.replace(/&amp;/g,"");		// remove &amp;
+		myLine = myLine.replace(/&nbsp;/g,"");		// remove &nbsp;
+		myLine = myLine.replace(/\t/g,"");			// remove tabs
+		myLine = myLine.replace(/\n/g,"");			// remove newlines
+		//myLine = myLine.replace(/ \(.*?\)/g,"");	// remove everything between <space>(brackets),
+		//   Secondary sources,Unp<span style='display:none'>ublished work</span></td>
+		myLine = myLine.replace(/.span style=.display:none..(.*?)..span./g,"$1");	// removes the display:none span and preserves the text
+		myLine = myLine.replace(/="/g,"='");		// replace charactercombination =" with ='
+		myLine = myLine.replace(/">/g,"'>");		// replace charactercombination "> with '>
+		myLine = myLine.replace(/\\"/g,"\'");		// replace double quote with a single quote
+		return myLine;
+	}
+
 	function toJSON(data) {
 		// split on tr and td
 		// First row contains head-information
@@ -244,7 +273,6 @@
 					}
 					// start fill first column if it contains an empty values
 					if (cIndex == 0) {
-						//console.log('myContent ' + headerList);
 						if (myText.replace(/\s+/g, "") == "") {
 							myText = myRememberCol0;
 						}
@@ -256,7 +284,6 @@
 					if (cIndex > 1) {
 						myText = $(cValue).html();
 					}
-					//myText = myText.replace(/\n/g,"<br>").replace(/\s/g,"&nbsp;"); //.replace(/\*/g,"_").replace(/\./g,"_");
 					// end keep layout in the example fields
 					
 					// end fill first column if there are empty values
@@ -272,14 +299,11 @@
 							headerArray.push(myText);		// the position in this array is the id for a heading 
 						}
 					}
-					//console.log('headerList >' + myRememberCol0 + '< ' + JSON.stringify(headerList));
-					// reads per column, so headerList is up to dat until this row and myRememberCol0 holds the last value of heading (=header)
-					
+					// reads per column, so headerList is up to date until this row and myRememberCol0 holds the last value of heading (=header)
 					if ((rIndex > 0) && (cIndex == 1)) {  // type; set id
 						if (myRememberCol0 in headerList) {
 							headerId = $.inArray(myRememberCol0, headerArray) || 0;
 							if (headerId > 0) {
-								//console.log('in header');
 								typeId = headerList[myRememberCol0].length;
 							}
 						}
@@ -291,23 +315,22 @@
 					if (rIndex == 0) {
 						if ($.inArray(cIndex, skipEmptyHeader) == -1) {  // skip for empty headers
 							myHeader[cIndex] = myText.replace(/\n/g, "").replace(/\s+/g, " ");
-							//myColHeaderArray.push(myText);   // remember to serve as key for content value (text)
 							myColHeaderArray.push(cIndex.toString());   // remember to serve as key for content value (number as text)
 						}
 					}
 					// end get header information
+
 					// start get content information and combine this with the previous gathered header information
 					// add a content-id which has the value of 0..n for the heading and 0..n for the type, joined by a _ (e.g. 0_0, 0_1) 
 					if (rIndex > 0) {
 						if ($.inArray(cIndex, skipEmptyHeader) == -1) {  // skip for empty headers
-							myContent[myColHeaderArray[cIndex]] = myText.replace(/^\s+/g, "").replace(/\s+/g, " ").replace(/&amp;/g,"").replace(/&nbsp;/g,"").replace(/\t/g,"").replace(/\n/g,"").replace(/ \(.*?\)/g,"").replace(/\\"/g,"\'").replace(/="/g,"='").replace(/">/g,"'>");
+							myContent[myColHeaderArray[cIndex]] = filterInput(myText);
 							// doubble headings will be replaced while sorting ...
 						}
 					}
 					// end get content information and combine this with the previous gathered header information
 				});
 				if (rIndex > 0) {
-					//console.log(Object.keys(myHeader).length + ' '+ Object.keys(myContent).length);
 					if (Object.keys(myHeader).length +1 == Object.keys(myContent).length) {		// +1 = for extra id key in myContent
 						myColArray.push(myContent);
 					}
@@ -315,10 +338,8 @@
 			});
 			myJSON["header"] = myHeader;
 			myJSON["content"] = myColArray;
-			//myJSON = getSortedContentWithChangedId(myJSON);
-		    //console.log(JSON.stringify(myJSON));
-			//myJSON = getSorted(myJSON);
-		    //console.log(JSON.stringify(myJSON));
+			myJSON = getSortedContentWithChangedId(myJSON);
+			//console.log(JSON.stringify(myJSON));
 			return myJSON;
 		}
 		catch(e) {
@@ -329,30 +350,8 @@
 	
 <script>
 	function pad (str, max) {
-	  //str = str.toString();
+	  str = str.toString();
 	  return str.length < max ? pad("0" + str, max) : str;
-	}
-	
-	function getSorted(data) {
-		// expects JSON, combines heading, type and id and returns the sorted JSON
-		var content = [];
-		var sortingArray = [];
-		$.each($(data.content), function(key, value) {
-			var sortKey = pad(value["3"], 3) + "-" + pad(value["4"], 3) + "-" + value.id;
-			sortingArray.push(sortKey);
-		});
-		sortingArray = [...sortingArray].sort((a, b) => a.localeCompare(b));
-		for (i = 0; i < sortingArray.length; i++) {
-			var sortedId = sortingArray[i].split("-")[2];
-			$.each($(data.content), function(key, value) {
-				if (value.id == sortedId) {
-					//console.log(value);
-					content.push(value);
-				}
-			});
-		}
-		data.content = content;
-		return data;
 	}
 </script>
 	
@@ -362,7 +361,6 @@
 		$("#data-style").html($(layout));
 	}
 </script>
-
 
 <script>
 var jsonDummy = '\
@@ -1011,6 +1009,7 @@ var jsonDummy = '\
 
 <script>
     $(document).ready(function() {
+		referenceHeight = $('#reference-list-example').height();	// see global, see wrapReferenceExample
 
     // The event listener for the file upload
     document.getElementById('txtFileUpload').addEventListener('change', upload, false);
@@ -1039,11 +1038,9 @@ var jsonDummy = '\
                    	data = event.target.result;
 					apaContent = toJSON(data);
 					addStyle(data);
-					//showSortedHeadingOptions(apaContent);
 					showHeadingOptions(apaContent);
-					//showSortedTypeOptions(apaContent);
 					showTypeOptions(apaContent);
-					showAppliesToOptions(apaContent);
+					showCombinesWith(apaContent);
 					showExamples(apaContent);
 					$('#select-heading').focus();
 				}
@@ -1071,89 +1068,951 @@ var jsonDummy = '\
 	// start get dummy file for testing purposes
 	
 	var fileContent = "\
-<table border=0 cellpadding=0 cellspacing=0 width=1064 style='border-collapse:\
- collapse;table-layout:fixed;width:1064pt'>\
- <col width=110 style='mso-width-source:userset;mso-width-alt:4693;width:110pt'>\
- <col width=131 style='mso-width-source:userset;mso-width-alt:5589;width:131pt'>\
+<html>\
+\
+<head>\
+<meta name=Title\
+content='Eisen voor een nieuwe APA tabel. Uitgewerkte headings en types'>\
+<meta http-equiv=Content-Type content='text/html; charset=macintosh'>\
+<meta name=ProgId content=Excel.Sheet>\
+<meta name=Generator content='Microsoft Excel 14'>\
+<link rel=File-List href='try_source_files/filelist.xml'>\
+<title>Eisen voor een nieuwe APA tabel. Uitgewerkte headings en types</title>\
+<style>\
+<!--table\
+	{mso-displayed-decimal-separator:'\,';\
+	mso-displayed-thousand-separator:'\.';}\
+@page\
+	{margin:.75in .7in .75in .7in;\
+	mso-header-margin:.3in;\
+	mso-footer-margin:.3in;\
+	mso-page-orientation:landscape;}\
+.font0\
+	{color:black;\
+	font-size:11.0pt;\
+	font-weight:400;\
+	font-style:normal;\
+	text-decoration:none;\
+	font-family:Calibri, sans-serif;\
+	mso-font-charset:0;}\
+.font6\
+	{color:black;\
+	font-size:11.0pt;\
+	font-weight:400;\
+	font-style:italic;\
+	text-decoration:none;\
+	font-family:Calibri, sans-serif;\
+	mso-font-charset:0;}\
+.font8\
+	{color:black;\
+	font-size:11.0pt;\
+	font-weight:400;\
+	font-style:normal;\
+	text-decoration:none;\
+	font-family:Calibri, sans-serif;\
+	mso-font-charset:0;}\
+.font9\
+	{color:black;\
+	font-size:11.0pt;\
+	font-weight:400;\
+	font-style:italic;\
+	text-decoration:none;\
+	font-family:Calibri, sans-serif;\
+	mso-font-charset:0;}\
+.style0\
+	{mso-number-format:General;\
+	text-align:general;\
+	vertical-align:bottom;\
+	white-space:nowrap;\
+	mso-rotate:0;\
+	mso-background-source:auto;\
+	mso-pattern:auto;\
+	color:black;\
+	font-size:11.0pt;\
+	font-weight:400;\
+	font-style:normal;\
+	text-decoration:none;\
+	font-family:Calibri, sans-serif;\
+	mso-font-charset:0;\
+	border:none;\
+	mso-protection:locked visible;\
+	mso-style-name:Normal;\
+	mso-style-id:0;}\
+td\
+	{mso-style-parent:style0;\
+	padding-top:1px;\
+	padding-right:1px;\
+	padding-left:1px;\
+	mso-ignore:padding;\
+	color:black;\
+	font-size:11.0pt;\
+	font-weight:400;\
+	font-style:normal;\
+	text-decoration:none;\
+	font-family:Calibri, sans-serif;\
+	mso-font-charset:0;\
+	mso-number-format:General;\
+	text-align:general;\
+	vertical-align:bottom;\
+	border:none;\
+	mso-background-source:auto;\
+	mso-pattern:auto;\
+	mso-protection:locked visible;\
+	white-space:nowrap;\
+	mso-rotate:0;}\
+.xl65\
+	{mso-style-parent:style0;\
+	font-weight:700;}\
+.xl66\
+	{mso-style-parent:style0;\
+	font-weight:700;\
+	border:.5pt solid windowtext;}\
+.xl67\
+	{mso-style-parent:style0;\
+	border:.5pt solid windowtext;}\
+.xl68\
+	{mso-style-parent:style0;\
+	border:.5pt solid windowtext;\
+	white-space:normal;}\
+.xl69\
+	{mso-style-parent:style0;\
+	font-size:12.0pt;\
+	font-weight:700;\
+	border:.5pt solid windowtext;}\
+.xl70\
+	{mso-style-parent:style0;\
+	font-size:12.0pt;\
+	font-weight:700;\
+	border:.5pt solid windowtext;\
+	white-space:normal;}\
+.xl71\
+	{mso-style-parent:style0;\
+	vertical-align:top;\
+	border:.5pt solid windowtext;}\
+.xl72\
+	{mso-style-parent:style0;\
+	color:red;\
+	font-family:Symbol, serif;\
+	mso-font-charset:2;\
+	text-align:left;\
+	vertical-align:middle;\
+	padding-left:60px;\
+	mso-char-indent-count:5;}\
+.xl73\
+	{mso-style-parent:style0;\
+	text-align:left;\
+	vertical-align:top;\
+	border:.5pt solid windowtext;}\
+.xl74\
+	{mso-style-parent:style0;\
+	font-size:12.0pt;\
+	font-weight:700;\
+	white-space:normal;}\
+.xl75\
+	{mso-style-parent:style0;\
+	color:black;\
+	text-align:left;\
+	vertical-align:top;\
+	border:.5pt solid windowtext;\
+	white-space:normal;\
+	padding-left:12px;\
+	mso-char-indent-count:1;}\
+.xl76\
+	{mso-style-parent:style0;\
+	vertical-align:top;\
+	border:.5pt solid windowtext;\
+	white-space:normal;}\
+.xl77\
+	{mso-style-parent:style0;\
+	text-align:left;\
+	vertical-align:top;\
+	border:.5pt solid windowtext;\
+	white-space:normal;}\
+.xl78\
+	{mso-style-parent:style0;\
+	color:black;\
+	vertical-align:top;\
+	border:.5pt solid windowtext;}\
+.xl79\
+	{mso-style-parent:style0;\
+	color:black;\
+	text-align:left;\
+	vertical-align:top;\
+	border:.5pt solid windowtext;\
+	white-space:normal;}\
+.xl80\
+	{mso-style-parent:style0;\
+	font-weight:700;\
+	vertical-align:top;\
+	border:.5pt solid windowtext;}\
+.xl81\
+	{mso-style-parent:style0;\
+	font-weight:700;\
+	border:.5pt solid windowtext;\
+	white-space:normal;}\
+.xl82\
+	{mso-style-parent:style0;\
+	vertical-align:top;\
+	white-space:normal;}\
+.xl83\
+	{mso-style-parent:style0;\
+	font-weight:700;\
+	vertical-align:top;\
+	border:.5pt solid windowtext;\
+	white-space:normal;}\
+.xl84\
+	{mso-style-parent:style0;\
+	font-weight:700;\
+	vertical-align:top;\
+	border-top:none;\
+	border-right:.5pt solid windowtext;\
+	border-bottom:none;\
+	border-left:.5pt solid windowtext;}\
+.xl85\
+	{mso-style-parent:style0;\
+	color:windowtext;\
+	font-weight:700;\
+	vertical-align:top;\
+	border:.5pt solid windowtext;}\
+.xl86\
+	{mso-style-parent:style0;\
+	color:#00B050;}\
+.xl87\
+	{mso-style-parent:style0;\
+	color:black;\
+	vertical-align:top;\
+	border:.5pt solid windowtext;\
+	white-space:normal;}\
+.xl88\
+	{mso-style-parent:style0;\
+	font-weight:700;\
+	border-top:.5pt solid windowtext;\
+	border-right:.5pt solid windowtext;\
+	border-bottom:.5pt solid windowtext;\
+	border-left:none;}\
+.xl89\
+	{mso-style-parent:style0;\
+	border-top:.5pt solid windowtext;\
+	border-right:.5pt solid windowtext;\
+	border-bottom:.5pt solid windowtext;\
+	border-left:none;}\
+.xl90\
+	{mso-style-parent:style0;\
+	border-top:none;\
+	border-right:.5pt solid windowtext;\
+	border-bottom:none;\
+	border-left:.5pt solid windowtext;}\
+.xl91\
+	{mso-style-parent:style0;\
+	border-top:none;\
+	border-right:.5pt solid windowtext;\
+	border-bottom:.5pt solid windowtext;\
+	border-left:.5pt solid windowtext;}\
+.xl92\
+	{mso-style-parent:style0;\
+	border-top:none;\
+	border-right:.5pt solid windowtext;\
+	border-bottom:.5pt solid windowtext;\
+	border-left:none;}\
+.xl93\
+	{mso-style-parent:style0;\
+	border-top:.5pt solid windowtext;\
+	border-right:.5pt solid windowtext;\
+	border-bottom:none;\
+	border-left:.5pt solid windowtext;}\
+.xl94\
+	{mso-style-parent:style0;\
+	vertical-align:top;\
+	border-top:.5pt solid windowtext;\
+	border-right:.5pt solid windowtext;\
+	border-bottom:.5pt solid windowtext;\
+	border-left:none;\
+	white-space:normal;}\
+.xl95\
+	{mso-style-parent:style0;\
+	color:black;\
+	vertical-align:top;\
+	border-top:1.0pt solid windowtext;\
+	border-right:1.0pt solid windowtext;\
+	border-bottom:1.0pt solid windowtext;\
+	border-left:none;\
+	white-space:normal;}\
+.xl96\
+	{mso-style-parent:style0;\
+	color:black;\
+	text-align:right;\
+	border:.5pt solid windowtext;\
+	white-space:normal;\
+	padding-right:12px;\
+	mso-char-indent-count:1;}\
+.xl97\
+	{mso-style-parent:style0;\
+	font-size:12.0pt;\
+	font-weight:700;}\
+.xl98\
+	{mso-style-parent:style0;\
+	vertical-align:top;\
+	border-top:none;\
+	border-right:.5pt solid windowtext;\
+	border-bottom:.5pt solid windowtext;\
+	border-left:.5pt solid windowtext;}\
+.xl99\
+	{mso-style-parent:style0;\
+	vertical-align:top;\
+	border-top:none;\
+	border-right:.5pt solid windowtext;\
+	border-bottom:.5pt solid windowtext;\
+	border-left:.5pt solid windowtext;\
+	white-space:normal;}\
+.xl100\
+	{mso-style-parent:style0;\
+	vertical-align:top;\
+	border-top:none;\
+	border-right:.5pt solid windowtext;\
+	border-bottom:none;\
+	border-left:.5pt solid windowtext;\
+	white-space:normal;}\
+.xl101\
+	{mso-style-parent:style0;\
+	color:windowtext;\
+	font-weight:700;\
+	border:.5pt solid windowtext;}\
+.xl102\
+	{mso-style-parent:style0;\
+	color:windowtext;\
+	font-family:Calibri;\
+	mso-generic-font-family:auto;\
+	mso-font-charset:0;\
+	border:.5pt solid windowtext;}\
+.xl103\
+	{mso-style-parent:style0;\
+	color:windowtext;\
+	font-family:Calibri;\
+	mso-generic-font-family:auto;\
+	mso-font-charset:0;\
+	border-top:.5pt solid windowtext;\
+	border-right:.5pt solid windowtext;\
+	border-bottom:.5pt solid windowtext;\
+	border-left:none;}\
+.xl104\
+	{mso-style-parent:style0;\
+	color:windowtext;\
+	font-family:Calibri;\
+	mso-generic-font-family:auto;\
+	mso-font-charset:0;\
+	border:.5pt solid windowtext;\
+	white-space:normal;}\
+.xl105\
+	{mso-style-parent:style0;\
+	color:windowtext;\
+	font-family:Calibri;\
+	mso-generic-font-family:auto;\
+	mso-font-charset:0;}\
+-->\
+</style>\
+</head>\
+\
+<body link=blue vlink=purple>\
+\
+<table border=0 cellpadding=0 cellspacing=0 width=1903 style='border-collapse:\
+ collapse;table-layout:fixed;width:1903pt'>\
+ <col width=199 style='mso-width-source:userset;mso-width-alt:8490;width:199pt'>\
+ <col width=143 style='mso-width-source:userset;mso-width-alt:6101;width:143pt'>\
+ <col width=340 style='mso-width-source:userset;mso-width-alt:14506;width:340pt'>\
+ <col width=213 style='mso-width-source:userset;mso-width-alt:9088;width:213pt'>\
+ <col width=148 style='mso-width-source:userset;mso-width-alt:6314;width:148pt'>\
  <col width=147 style='mso-width-source:userset;mso-width-alt:6272;width:147pt'>\
- <col width=250 style='mso-width-source:userset;mso-width-alt:10666;width:250pt'>\
- <col width=213 span=2 style='mso-width-source:userset;mso-width-alt:9088;\
- width:213pt'>\
+ <col width=250 span=2 style='mso-width-source:userset;mso-width-alt:10666;\
+ width:250pt'>\
+ <col width=213 style='mso-width-source:userset;mso-width-alt:9088;width:213pt'>\
  <tr class=xl65 height=15 style='height:15.0pt'>\
-  <td height=15 class=xl69 width=110 style='height:15.0pt;width:110pt'>Heading</td>\
-  <td class=xl69 width=131 style='border-left:none;width:131pt'>Types</td>\
-  <td class=xl69 width=147 style='border-left:none;width:147pt'>In-tekst\
-  example</td>\
+  <td height=15 class=xl69 width=199 style='height:15.0pt;width:199pt'>Heading</td>\
+  <td class=xl69 width=143 style='border-left:none;width:143pt'>Types</td>\
+  <td class=xl97 width=340 style='width:340pt'>Combines with</td>\
+  <td class=xl74 width=213 style='width:213pt'>Ranking headings</td>\
+  <td class=xl65 width=148 style='width:148pt'>Ranking types</td>\
+  <td class=xl69 width=147 style='width:147pt'>In-tekst example</td>\
   <td class=xl70 width=250 style='border-left:none;width:250pt'>Reference list\
-  example </td>\
+  example</td>\
+  <td class=xl70 width=250 style='border-left:none;width:250pt'>Figure heading\
+  example</td>\
   <td class=xl66 width=213 style='border-left:none;width:213pt'>Remark</td>\
-  <td class=xl74 width=213 style='width:213pt'></td>\
  </tr>\
  <tr class=xl65 height=56 style='height:56.0pt'>\
-  <td height=56 class=xl81 style='height:56.0pt;border-top:none'>Books</td>\
+  <td height=56 class=xl80 style='height:56.0pt;border-top:none'>Books</td>\
   <td class=xl73 style='border-top:none;border-left:none'>Paper book</td>\
+  <td class=xl73 style='border-left:none'>Authors, Illustrations &amp; Maps,\
+  Secondary sources,Unpublished work</td>\
+  <td class=xl96 width=213 style='border-left:none;width:213pt'>1</td>\
+  <td class=xl88 align=right>1</td>\
   <td class=xl71 style='border-top:none;border-left:none'>Dorf (2006, p.\
   51)<span style='mso-spacerun:yes'>&nbsp;</span></td>\
-  <td class=xl76 width=250 style='border-top:none;border-left:none;width:250pt'>Dorf,\
-  R. C. (2006). <font class='font10'>The electrical engineering     handbook</font><font\
-  class='font9'><span style='mso-spacerun:yes'>&nbsp;</span>(3rd ed.). Boca\
+  <td class=xl75 width=250 style='border-top:none;border-left:none;width:250pt'>Dorf,\
+  R. C. (2006). <font class='font9'>The electrical engineering     handbook</font><font\
+  class='font8'><span style='mso-spacerun:yes'>&nbsp;</span>(3rd ed.). Boca\
   Raton, FL: CRC/Taylor &amp; Francis.<span\
   style='mso-spacerun:yes'>&nbsp;</span></font></td>\
+  <td class=xl75 width=250 style='border-top:none;border-left:none;width:250pt'>&nbsp;</td>\
   <td class=xl68 width=213 style='border-top:none;border-left:none;width:213pt'>Place\
   information about editions, volume numbers, and page numbers in parentheses\
   with the period after the parentheses: (Rev. ed.). or (Vol. xx, pp. xxx-xxx).</td>\
-  <td class=xl75 width=213 style='width:213pt'></td>\
  </tr>\
  <tr height=42 style='height:42.0pt'>\
-  <td height=42 class=xl67 style='height:42.0pt;border-top:none'>&nbsp;</td>\
+  <td height=42 class=xl80 style='height:42.0pt;border-top:none'>Books</td>\
   <td class=xl71 style='border-top:none;border-left:none'>Electronic book with\
   doi</td>\
-  <td class=xl79 style='border-top:none;border-left:none'>Ardia<span\
+  <td class=xl71 style='border-top:none;border-left:none'>Authors,\
+  Illustrations &amp; Maps, Secondary sources,Unpublished work</td>\
+  <td class=xl67 align=right style='border-top:none;border-left:none'>1</td>\
+  <td class=xl89 align=right style='border-top:none'>2</td>\
+  <td class=xl78 style='border-top:none;border-left:none'>Ardia<span\
   style='mso-spacerun:yes'>&nbsp; </span>(2008, p. xx)<span\
   style='mso-spacerun:yes'>&nbsp;</span></td>\
-  <td class=xl78 width=250 style='border-top:none;border-left:none;width:250pt'>Ardia,\
+  <td class=xl77 width=250 style='border-top:none;border-left:none;width:250pt'>Ardia,\
   D. (2008). <font class='font6'>Financial risk management with Bayesian\
   estimation of GARCH models: theory and applications</font><font class='font0'>.\
   doi:10.1007/978-3-540-78657-3</font></td>\
-  <td class=xl77 width=213 style='border-top:none;border-left:none;width:213pt'>For\
+  <td class=xl77 width=250 style='border-top:none;border-left:none;width:250pt'>&nbsp;</td>\
+  <td class=xl76 width=213 style='border-top:none;border-left:none;width:213pt'>For\
   books or chapters available online, the electronic retrieval statement takes\
   the place of publisher location and name.</td>\
-  <td></td>\
  </tr>\
  <tr height=42 style='height:42.0pt'>\
-  <td height=42 class=xl67 style='height:42.0pt;border-top:none'>&nbsp;</td>\
+  <td height=42 class=xl80 style='height:42.0pt;border-top:none'>Books</td>\
   <td class=xl71 style='border-top:none;border-left:none'>Electronic book with\
   link</td>\
-  <td class=xl79 style='border-top:none;border-left:none'>Edwards (2008, p.\
+  <td class=xl71 style='border-top:none;border-left:none'>Authors,\
+  Illustrations &amp; Maps, Secondary sources,Unpublished work</td>\
+  <td class=xl67 align=right style='border-top:none;border-left:none'>1</td>\
+  <td class=xl89 align=right style='border-top:none'>3</td>\
+  <td class=xl78 style='border-top:none;border-left:none'>Edwards (2008, p.\
   xx)<span style='mso-spacerun:yes'>&nbsp;</span></td>\
-  <td class=xl78 width=250 style='border-top:none;border-left:none;width:250pt'>Edwards,\
+  <td class=xl77 width=250 style='border-top:none;border-left:none;width:250pt'>Edwards,\
   P. N. (2008). <font class='font6'>How to Read a Book</font><font class='font0'><span\
   style='mso-spacerun:yes'>&nbsp;</span>(v 5.0). Retrieved from\
   http://pne.people.si.umich.edu/PDF/howtoread.pdf</font></td>\
-  <td class=xl78 width=213 style='border-top:none;border-left:none;width:213pt'>For\
+  <td class=xl77 width=250 style='border-top:none;border-left:none;width:250pt'>&nbsp;</td>\
+  <td class=xl77 width=213 style='border-top:none;border-left:none;width:213pt'>For\
   books or chapters available online, the electronic retrieval statement takes\
   the place of publisher location and name.</td>\
-  <td></td>\
  </tr>\
  <tr height=42 style='height:42.0pt'>\
-  <td height=42 class=xl67 style='height:42.0pt;border-top:none'>&nbsp;</td>\
+  <td height=42 class=xl80 style='height:42.0pt;border-top:none'>Books</td>\
   <td class=xl71 style='border-top:none;border-left:none'>Edited book</td>\
-  <td class=xl78 width=147 style='border-top:none;border-left:none;width:147pt'>The\
+  <td class=xl71 style='border-top:none;border-left:none'>Authors,\
+  Illustrations &amp; Maps, Secondary sources,Unpublished work</td>\
+  <td class=xl67 align=right style='border-top:none;border-left:none'>1</td>\
+  <td class=xl89 align=right style='border-top:none'>4</td>\
+  <td class=xl77 width=147 style='border-top:none;border-left:none;width:147pt'>The\
   Encyclopedia of aerospace engineering (2010, para 2.1)<span\
   style='mso-spacerun:yes'>&nbsp;</span></td>\
-  <td class=xl77 width=250 style='border-top:none;border-left:none;width:250pt'>Blockley,\
+  <td class=xl76 width=250 style='border-top:none;border-left:none;width:250pt'>Blockley,\
   R., &amp; Shyy, W. (Eds.). (2010). <font class='font6'>Encyclopedia of\
   aerospace engineering</font><font class='font0'>. (6th ed., Vols. 1-9).\
   Milton Keynes, England: Wiley.</font></td>\
-  <td class=xl78 width=213 style='border-top:none;border-left:none;width:213pt'>For\
+  <td class=xl76 width=250 style='border-top:none;border-left:none;width:250pt'>&nbsp;</td>\
+  <td class=xl77 width=213 style='border-top:none;border-left:none;width:213pt'>For\
   works with a large editorial board, use the name of the lead editor, followed\
   by et al.</td>\
-  <td></td>\
- </tr>"
+ </tr>\
+ <tr height=70 style='height:70.0pt'>\
+  <td height=70 class=xl80 style='height:70.0pt;border-top:none'>Books</td>\
+  <td class=xl71 style='border-top:none;border-left:none'>Book chapter</td>\
+  <td class=xl71 style='border-top:none;border-left:none'>Authors,\
+  Illustrations &amp; Maps, Secondary sources,Unpublished work</td>\
+  <td class=xl67 align=right style='border-top:none;border-left:none'>1</td>\
+  <td class=xl89 align=right style='border-top:none'>5</td>\
+  <td class=xl78 style='border-top:none;border-left:none'>Gibson (2011)<span\
+  style='mso-spacerun:yes'>&nbsp;</span></td>\
+  <td class=xl79 width=250 style='border-top:none;border-left:none;width:250pt'>Gibson,\
+  C. C. (2011).<font class='font9'> </font><font class='font8'>Impact of the\
+  larger social context on the distance learner</font><font class='font9'>.</font><font\
+  class='font8'> In S. Allsop </font><font class='font0'>(Ed.),</font><font\
+  class='font8'> </font><font class='font9'>International Council for</font><font\
+  class='font6'> Distance</font><font class='font9'> Education: One world many\
+  voices: Quality in open</font><font class='font6'> and</font><font\
+  class='font9'> </font><font class='font6'>distance learning</font><font\
+  class='font0'><span style='mso-spacerun:yes'>&nbsp;</span>(pp. 279-282).\
+  Chicago, IL: Milton Keynes.</font></td>\
+  <td class=xl79 width=250 style='border-top:none;border-left:none;width:250pt'>&nbsp;</td>\
+  <td class=xl67 style='border-top:none;border-left:none'>&nbsp;</td>\
+ </tr>\
+ <tr height=14 style='height:14.0pt'>\
+  <td height=14 class=xl80 style='height:14.0pt;border-top:none'>Books</td>\
+  <td class=xl71 style='border-top:none;border-left:none'>Brochure</td>\
+  <td class=xl71 style='border-top:none;border-left:none'>Authors,\
+  Illustrations &amp; Maps, Secondary sources,Unpublished work</td>\
+  <td class=xl67 align=right style='border-top:none;border-left:none'>1</td>\
+  <td class=xl89 align=right style='border-top:none'>6</td>\
+  <td class=xl67 style='border-top:none;border-left:none'>&nbsp;</td>\
+  <td class=xl67 style='border-top:none;border-left:none'>&nbsp;</td>\
+  <td class=xl67 style='border-top:none;border-left:none'>&nbsp;</td>\
+  <td class=xl67 style='border-top:none;border-left:none'>&nbsp;</td>\
+ </tr>\
+ <tr height=14 style='height:14.0pt'>\
+  <td height=14 class=xl80 style='height:14.0pt;border-top:none'>Books</td>\
+  <td class=xl67 style='border-top:none;border-left:none'>Thesis</td>\
+  <td class=xl67 style='border-top:none;border-left:none'>Authors,\
+  Illustrations &amp; Maps, Secondary sources,Unpublished work</td>\
+  <td class=xl67 align=right style='border-top:none;border-left:none'>1</td>\
+  <td class=xl89 align=right style='border-top:none'>7</td>\
+  <td class=xl67 style='border-top:none;border-left:none'>&nbsp;</td>\
+  <td class=xl68 width=250 style='border-top:none;border-left:none;width:250pt'>&nbsp;</td>\
+  <td class=xl68 width=250 style='border-top:none;border-left:none;width:250pt'>&nbsp;</td>\
+  <td class=xl67 style='border-top:none;border-left:none'>&nbsp;</td>\
+ </tr>\
+ <tr height=14 style='height:14.0pt'>\
+  <td height=14 class=xl80 style='height:14.0pt;border-top:none'>Books</td>\
+  <td class=xl67 style='border-top:none;border-left:none'>Lecture note</td>\
+  <td class=xl67 style='border-top:none;border-left:none'>Authors,\
+  Illustrations &amp; Maps, Secondary sources,Unpublished work</td>\
+  <td class=xl67 align=right style='border-top:none;border-left:none'>1</td>\
+  <td class=xl89 align=right style='border-top:none'>8</td>\
+  <td class=xl67 style='border-top:none;border-left:none'>&nbsp;</td>\
+  <td class=xl68 width=250 style='border-top:none;border-left:none;width:250pt'>&nbsp;</td>\
+  <td class=xl68 width=250 style='border-top:none;border-left:none;width:250pt'>&nbsp;</td>\
+  <td class=xl67 style='border-top:none;border-left:none'>&nbsp;</td>\
+ </tr>\
+ <tr class=xl105 height=14 style='height:14.0pt'>\
+  <td height=14 class=xl101 style='height:14.0pt;border-top:none'>Authors</td>\
+  <td class=xl102 style='border-top:none;border-left:none'>Single author</td>\
+  <td class=xl102 style='border-top:none;border-left:none'>&nbsp;</td>\
+  <td class=xl102 align=right style='border-top:none;border-left:none'>7</td>\
+  <td class=xl103 align=right style='border-top:none'>1</td>\
+  <td class=xl102 style='border-top:none;border-left:none'>&nbsp;</td>\
+  <td class=xl104 width=250 style='border-top:none;border-left:none;width:250pt'>&nbsp;</td>\
+  <td class=xl104 width=250 style='border-top:none;border-left:none;width:250pt'>&nbsp;</td>\
+  <td class=xl102 style='border-top:none;border-left:none'>&nbsp;</td>\
+ </tr>\
+ <tr height=14 style='height:14.0pt'>\
+  <td height=14 class=xl66 style='height:14.0pt;border-top:none'>Authors</td>\
+  <td class=xl67 style='border-top:none;border-left:none'>Organisation/Institution</td>\
+  <td class=xl67 style='border-top:none;border-left:none'>&nbsp;</td>\
+  <td class=xl67 align=right style='border-top:none;border-left:none'>7</td>\
+  <td class=xl89 align=right style='border-top:none'>2</td>\
+  <td class=xl67 style='border-top:none;border-left:none'>&nbsp;</td>\
+  <td class=xl68 width=250 style='border-top:none;border-left:none;width:250pt'>&nbsp;</td>\
+  <td class=xl68 width=250 style='border-top:none;border-left:none;width:250pt'>&nbsp;</td>\
+  <td class=xl67 style='border-top:none;border-left:none'>&nbsp;</td>\
+ </tr>\
+ <tr height=14 style='height:14.0pt'>\
+  <td height=14 class=xl66 style='height:14.0pt;border-top:none'>Authors</td>\
+  <td class=xl67 style='border-top:none;border-left:none'>Two authors</td>\
+  <td class=xl67 style='border-top:none;border-left:none'>&nbsp;</td>\
+  <td class=xl67 align=right style='border-top:none;border-left:none'>7</td>\
+  <td class=xl89 align=right style='border-top:none'>3</td>\
+  <td class=xl67 style='border-top:none;border-left:none'>&nbsp;</td>\
+  <td class=xl68 width=250 style='border-top:none;border-left:none;width:250pt'>&nbsp;</td>\
+  <td class=xl68 width=250 style='border-top:none;border-left:none;width:250pt'>&nbsp;</td>\
+  <td class=xl67 style='border-top:none;border-left:none'>&nbsp;</td>\
+ </tr>\
+ <tr height=42 style='height:42.0pt'>\
+  <td height=42 class=xl80 style='height:42.0pt;border-top:none'>Authors</td>\
+  <td class=xl71 style='border-top:none;border-left:none'>Three till five\
+  authors</td>\
+  <td class=xl98 style='border-left:none'>&nbsp;</td>\
+  <td class=xl91 align=right style='border-left:none'>7</td>\
+  <td class=xl92 align=right>4</td>\
+  <td class=xl87 width=147 style='border-top:none;border-left:none;width:147pt'>Anderson,\
+  Sweeney and Williams (2006, p. xx)<span\
+  style='mso-spacerun:yes'>&nbsp;</span></td>\
+  <td class=xl68 width=250 style='border-top:none;border-left:none;width:250pt'>Anderson,\
+  D. R., Sweeney, D. J., &amp; Williams, T. A. (2006). <font class='font6'>Quantitative\
+  methods for business</font><font class='font0'>. Mason, OH: Thomson.</font></td>\
+  <td class=xl68 width=250 style='border-top:none;border-left:none;width:250pt'>&nbsp;</td>\
+  <td class=xl67 style='border-top:none;border-left:none'>&nbsp;</td>\
+ </tr>\
+ <tr height=42 style='height:42.0pt'>\
+  <td height=42 class=xl80 style='height:42.0pt;border-top:none'>Authors</td>\
+  <td class=xl71 style='border-top:none;border-left:none'>Six or more authors</td>\
+  <td class=xl71 style='border-top:none;border-left:none'>&nbsp;</td>\
+  <td class=xl67 align=right style='border-top:none;border-left:none'>7</td>\
+  <td class=xl89 align=right style='border-top:none'>5</td>\
+  <td class=xl71 style='border-top:none;border-left:none'>Brown et al.\
+  (2008)<span style='mso-spacerun:yes'>&nbsp;</span></td>\
+  <td class=xl68 width=250 style='border-top:none;border-left:none;width:250pt'>Brown,\
+  D., Harper, H., Frei, M., Ingham, M., Otter, G. Raskin, J., É Delay, A.\
+  (2008). <font class='font6'>Basic writing skills</font><font class='font0'>.\
+  Toronto, Canada: McGraw-Hill.</font></td>\
+  <td class=xl68 width=250 style='border-top:none;border-left:none;width:250pt'>&nbsp;</td>\
+  <td class=xl67 style='border-top:none;border-left:none'>&nbsp;</td>\
+ </tr>\
+ <tr height=70 style='height:70.0pt'>\
+  <td height=70 class=xl80 style='height:70.0pt;border-top:none'>Authors</td>\
+  <td class=xl76 width=143 style='border-top:none;border-left:none;width:143pt'>Authors\
+  with the same last name</td>\
+  <td class=xl99 width=340 style='border-left:none;width:340pt'>&nbsp;</td>\
+  <td class=xl91 align=right style='border-left:none'>7</td>\
+  <td class=xl92 align=right>6</td>\
+  <td class=xl76 width=147 style='border-top:none;border-left:none;width:147pt'>(P.\
+  M. Anderson, 2003, p. xx)<br>\
+  (J. B. Anderson, 2005, p. xx)<br>\
+  </td>\
+  <td class=xl76 width=250 style='border-top:none;border-left:none;width:250pt'>Anderson,\
+  J. B. (2005). <font class='font6'>Digital transmission engineering</font><font\
+  class='font0'>. Piscataway, NJ: IEEE Press.<br>\
+   Anderson, P. M. (2003). </font><font\
+  class='font6'>Analysis of faulted power systems</font><font class='font0'>.\
+  Piscataway, NJ: IEEE Press.<span\
+  style='mso-spacerun:yes'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;\
+  </span><br>\
+  </font></td>\
+  <td class=xl76 width=250 style='border-top:none;border-left:none;width:250pt'>&nbsp;</td>\
+  <td class=xl67 style='border-top:none;border-left:none'>&nbsp;</td>\
+ </tr>\
+ <tr height=70 style='height:70.0pt'>\
+  <td height=70 class=xl80 style='height:70.0pt;border-top:none'>Authors</td>\
+  <td class=xl76 width=143 style='border-top:none;border-left:none;width:143pt'>Multiple\
+  works by the same author</td>\
+  <td class=xl76 width=340 style='border-top:none;border-left:none;width:340pt'>&nbsp;</td>\
+  <td class=xl67 align=right style='border-top:none;border-left:none'>7</td>\
+  <td class=xl89 align=right style='border-top:none'>7</td>\
+  <td class=xl76 width=147 style='border-top:none;border-left:none;width:147pt'>(Smith,\
+  2005, p. xx; 2007, p. yy)<span style='mso-spacerun:yes'>&nbsp;</span></td>\
+  <td class=xl76 width=250 style='border-top:none;border-left:none;width:250pt'>Smith,\
+  P. (2005). <font class='font6'>Piping Materials Guide</font><font\
+  class='font0'>. Oxford, England: Elsevier.<br>\
+   Smith, P. (2007). </font><font\
+  class='font6'>Process piping design handbook: fundamentals of piping design</font><font\
+  class='font0'>. Houston, TX: Gulf.<br>\
+  </font></td>\
+  <td class=xl76 width=250 style='border-top:none;border-left:none;width:250pt'>&nbsp;</td>\
+  <td class=xl67 style='border-top:none;border-left:none'>&nbsp;</td>\
+ </tr>\
+ <tr height=70 style='height:70.0pt'>\
+  <td height=70 class=xl80 style='height:70.0pt;border-top:none'>Authors</td>\
+  <td class=xl76 width=143 style='border-top:none;border-left:none;width:143pt'>Multiple\
+  works by the same author in the same year</td>\
+  <td class=xl76 width=340 style='border-top:none;border-left:none;width:340pt'>&nbsp;</td>\
+  <td class=xl67 align=right style='border-top:none;border-left:none'>7</td>\
+  <td class=xl67 align=right style='border-top:none;border-left:none'>8</td>\
+  <td class=xl76 width=147 style='border-top:none;border-left:none;width:147pt'>(Napier,\
+  1993a, p. xx; 1993b, p. yy) É</td>\
+  <td class=xl68 width=250 style='border-top:none;border-left:none;width:250pt'>Napier,\
+  A. (1993a).<font class='font6'> Fatal storm</font><font class='font0'>.\
+  Sydney, Australia: Allen &amp; Unwin.    <br>\
+   Napier, A. (1993b). </font><font\
+  class='font6'>Survival at sea</font><font class='font0'>. Sydney, Australia:\
+  Allen &amp; Unwin.<br>\
+  </font></td>\
+  <td class=xl68 width=250 style='border-top:none;border-left:none;width:250pt'>&nbsp;</td>\
+  <td class=xl67 style='border-top:none;border-left:none'>&nbsp;</td>\
+ </tr>\
+ <tr height=42 style='height:42.0pt'>\
+  <td height=42 class=xl80 style='height:42.0pt;border-top:none'>Articles &amp;\
+  Papers</td>\
+  <td class=xl76 width=143 style='border-top:none;border-left:none;width:143pt'>Journal\
+  article</td>\
+  <td class=xl76 width=340 style='border-top:none;border-left:none;width:340pt'>Authors</td>\
+  <td class=xl67 align=right style='border-top:none;border-left:none'>2</td>\
+  <td class=xl89 align=right style='border-top:none'>1</td>\
+  <td class=xl76 width=147 style='border-top:none;border-left:none;width:147pt'>(Cutler,\
+  2011)</td>\
+  <td class=xl76 width=250 style='border-top:none;border-left:none;width:250pt'>Cutler,\
+  A. D. (2011). High-Frequency Pulsed Combustion Actuator Experiments. <font\
+  class='font6'>AIAA Journal</font><font class='font0'>, </font><font\
+  class='font6'>49</font><font class='font0'>(9), 1943-1950.</font></td>\
+  <td class=xl76 width=250 style='border-top:none;border-left:none;width:250pt'>&nbsp;</td>\
+  <td class=xl67 style='border-top:none;border-left:none'>&nbsp;</td>\
+ </tr>\
+ <tr height=14 style='height:14.0pt'>\
+  <td height=14 class=xl85 style='height:14.0pt;border-top:none'>Articles &amp;\
+  Papers</td>\
+  <td class=xl76 width=143 style='border-top:none;border-left:none;width:143pt'>Journal\
+  article with DOI</td>\
+  <td class=xl76 width=340 style='border-top:none;border-left:none;width:340pt'>Authors</td>\
+  <td class=xl67 align=right style='border-top:none;border-left:none'>2</td>\
+  <td class=xl89 align=right style='border-top:none'>2</td>\
+  <td class=xl76 width=147 style='border-top:none;border-left:none;width:147pt'>&nbsp;</td>\
+  <td class=xl68 width=250 style='border-top:none;border-left:none;width:250pt'>&nbsp;</td>\
+  <td class=xl68 width=250 style='border-top:none;border-left:none;width:250pt'>&nbsp;</td>\
+  <td class=xl67 style='border-top:none;border-left:none'>&nbsp;</td>\
+ </tr>\
+ <tr height=14 style='height:14.0pt'>\
+  <td height=14 class=xl80 style='height:14.0pt;border-top:none'>Articles &amp;\
+  Papers</td>\
+  <td class=xl76 width=143 style='border-top:none;border-left:none;width:143pt'>Newspaper\
+  article</td>\
+  <td class=xl76 width=340 style='border-top:none;border-left:none;width:340pt'>Authors</td>\
+  <td class=xl67 align=right style='border-top:none;border-left:none'>2</td>\
+  <td class=xl89 align=right style='border-top:none'>3</td>\
+  <td class=xl76 width=147 style='border-top:none;border-left:none;width:147pt'>&nbsp;</td>\
+  <td class=xl68 width=250 style='border-top:none;border-left:none;width:250pt'>&nbsp;</td>\
+  <td class=xl68 width=250 style='border-top:none;border-left:none;width:250pt'>&nbsp;</td>\
+  <td class=xl67 style='border-top:none;border-left:none'>&nbsp;</td>\
+ </tr>\
+ <tr height=14 style='height:14.0pt'>\
+  <td height=14 class=xl80 style='height:14.0pt;border-top:none'>Articles &amp;\
+  Papers</td>\
+  <td class=xl76 width=143 style='border-top:none;border-left:none;width:143pt'>Online\
+  newspaper article</td>\
+  <td class=xl76 width=340 style='border-top:none;border-left:none;width:340pt'>Authors</td>\
+  <td class=xl67 align=right style='border-top:none;border-left:none'>2</td>\
+  <td class=xl89 align=right style='border-top:none'>4</td>\
+  <td class=xl76 width=147 style='border-top:none;border-left:none;width:147pt'>&nbsp;</td>\
+  <td class=xl68 width=250 style='border-top:none;border-left:none;width:250pt'>&nbsp;</td>\
+  <td class=xl68 width=250 style='border-top:none;border-left:none;width:250pt'>&nbsp;</td>\
+  <td class=xl67 style='border-top:none;border-left:none'>&nbsp;</td>\
+ </tr>\
+ <tr height=14 style='height:14.0pt'>\
+  <td height=14 class=xl66 style='height:14.0pt;border-top:none'>Reports</td>\
+  <td class=xl76 width=143 style='border-top:none;border-left:none;width:143pt'>Printed\
+  report</td>\
+  <td class=xl76 width=340 style='border-top:none;border-left:none;width:340pt'>&nbsp;</td>\
+  <td class=xl67 align=right style='border-top:none;border-left:none'>3</td>\
+  <td class=xl89 align=right style='border-top:none'>1</td>\
+  <td class=xl76 width=147 style='border-top:none;border-left:none;width:147pt'>&nbsp;</td>\
+  <td class=xl68 width=250 style='border-top:none;border-left:none;width:250pt'>&nbsp;</td>\
+  <td class=xl68 width=250 style='border-top:none;border-left:none;width:250pt'>&nbsp;</td>\
+  <td class=xl67 style='border-top:none;border-left:none'>&nbsp;</td>\
+ </tr>\
+ <tr height=84 style='height:84.0pt'>\
+  <td height=84 class=xl80 style='height:84.0pt;border-top:none'>Reports</td>\
+  <td class=xl76 width=143 style='border-top:none;border-left:none;width:143pt'>Online\
+  report</td>\
+  <td class=xl76 width=340 style='border-top:none;border-left:none;width:340pt'>&nbsp;</td>\
+  <td class=xl67 align=right style='border-top:none;border-left:none'>3</td>\
+  <td class=xl89 align=right style='border-top:none'>2</td>\
+  <td class=xl82 width=147 style='width:147pt'>It is stated by Van der Wel and\
+  Bergen (2000) É</td>\
+  <td class=xl76 width=250 style='border-top:none;width:250pt'>Van der Wel, N.,\
+  &amp; Bergen, V. H. S. (2000). <font class='font6'>Plattelandsvernieuwing en\
+  cultuur: interactieve planontwikkeling </font><font class='font0'>(NRLO-rapport\
+  nr. 2000/8). Retrieved from Innovatie Agro &amp; Natuur website:\
+  http://publications.tno.nl/publication/34614835/QuPGHi/NRLO-2000-08.pdf</font></td>\
+  <td class=xl76 width=250 style='border-top:none;border-left:none;width:250pt'>&nbsp;</td>\
+  <td class=xl67 style='border-top:none;border-left:none'>&nbsp;</td>\
+ </tr>\
+ <tr height=14 style='height:14.0pt'>\
+  <td height=14 class=xl84 style='height:14.0pt'>On the internet/Social media</td>\
+  <td class=xl76 width=143 style='border-top:none;border-left:none;width:143pt'>Page\
+  on the internet</td>\
+  <td class=xl76 width=340 style='border-top:none;border-left:none;width:340pt'>Illustrations\
+  &amp; Maps</td>\
+  <td class=xl67 align=right style='border-top:none;border-left:none'>4</td>\
+  <td class=xl89 align=right style='border-top:none'>1</td>\
+  <td class=xl94 width=147 style='width:147pt'>&nbsp;</td>\
+  <td class=xl76 width=250 style='border-top:none;border-left:none;width:250pt'>&nbsp;</td>\
+  <td class=xl76 width=250 style='border-top:none;border-left:none;width:250pt'>&nbsp;</td>\
+  <td class=xl67 style='border-top:none;border-left:none'>&nbsp;</td>\
+ </tr>\
+ <tr height=28 style='height:28.0pt'>\
+  <td height=28 class=xl80 style='height:28.0pt'>On the internet/Social media</td>\
+  <td class=xl76 width=143 style='border-top:none;border-left:none;width:143pt'>Company\
+  on the internet</td>\
+  <td class=xl99 width=340 style='border-left:none;width:340pt'>&nbsp;</td>\
+  <td class=xl91 align=right style='border-left:none'>4</td>\
+  <td class=xl92 align=right>2</td>\
+  <td class=xl82 width=147 style='width:147pt'>On the website of Boei (n.d.) É.</td>\
+  <td class=xl68 width=250 style='border-top:none;width:250pt'>Boei. (n.d.).\
+  Project graansilo. Retrieved May 23, 2017 from\
+  http://www.boei.nl/projecten/graansilo-wehl</td>\
+  <td class=xl68 width=250 style='border-top:none;border-left:none;width:250pt'>&nbsp;</td>\
+  <td class=xl67 style='border-top:none;border-left:none'>&nbsp;</td>\
+ </tr>\
+ <tr height=14 style='height:14.0pt'>\
+  <td height=14 class=xl84 style='height:14.0pt'>On the internet/Social media</td>\
+  <td class=xl76 width=143 style='border-top:none;border-left:none;width:143pt'>Entry\
+  online encyclopedia</td>\
+  <td class=xl76 width=340 style='border-top:none;border-left:none;width:340pt'>&nbsp;</td>\
+  <td class=xl67 align=right style='border-top:none;border-left:none'>4</td>\
+  <td class=xl89 align=right style='border-top:none'>3</td>\
+  <td class=xl76 width=147 style='border-left:none;width:147pt'>&nbsp;</td>\
+  <td class=xl68 width=250 style='border-top:none;border-left:none;width:250pt'>&nbsp;</td>\
+  <td class=xl68 width=250 style='border-top:none;border-left:none;width:250pt'>&nbsp;</td>\
+  <td class=xl67 style='border-top:none;border-left:none'>&nbsp;</td>\
+ </tr>\
+ <tr height=14 style='height:14.0pt'>\
+  <td height=14 class=xl84 style='height:14.0pt'>On the internet/Social media</td>\
+  <td class=xl76 width=143 style='border-top:none;border-left:none;width:143pt'>Podcast</td>\
+  <td class=xl76 width=340 style='border-top:none;border-left:none;width:340pt'>&nbsp;</td>\
+  <td class=xl67 align=right style='border-top:none;border-left:none'>4</td>\
+  <td class=xl89 align=right style='border-top:none'>4</td>\
+  <td class=xl76 width=147 style='border-top:none;border-left:none;width:147pt'>&nbsp;</td>\
+  <td class=xl68 width=250 style='border-top:none;border-left:none;width:250pt'>&nbsp;</td>\
+  <td class=xl68 width=250 style='border-top:none;border-left:none;width:250pt'>&nbsp;</td>\
+  <td class=xl67 style='border-top:none;border-left:none'>&nbsp;</td>\
+ </tr>\
+ <tr height=14 style='height:14.0pt'>\
+  <td height=14 class=xl84 style='height:14.0pt'>On the internet/Social media</td>\
+  <td class=xl76 width=143 style='border-top:none;border-left:none;width:143pt'>YouTube</td>\
+  <td class=xl76 width=340 style='border-top:none;border-left:none;width:340pt'>&nbsp;</td>\
+  <td class=xl67 align=right style='border-top:none;border-left:none'>4</td>\
+  <td class=xl89 align=right style='border-top:none'>5</td>\
+  <td class=xl76 width=147 style='border-top:none;border-left:none;width:147pt'>&nbsp;</td>\
+  <td class=xl68 width=250 style='border-top:none;border-left:none;width:250pt'>&nbsp;</td>\
+  <td class=xl68 width=250 style='border-top:none;border-left:none;width:250pt'>&nbsp;</td>\
+  <td class=xl67 style='border-top:none;border-left:none'>&nbsp;</td>\
+ </tr>\
+ <tr height=14 style='height:14.0pt'>\
+  <td height=14 class=xl81 width=199 style='height:14.0pt;width:199pt'>On the\
+  internet/Social media</td>\
+  <td class=xl76 width=143 style='border-top:none;border-left:none;width:143pt'>Web\
+  log post/comment</td>\
+  <td class=xl76 width=340 style='border-top:none;border-left:none;width:340pt'>&nbsp;</td>\
+  <td class=xl67 align=right style='border-top:none;border-left:none'>4</td>\
+  <td class=xl89 align=right style='border-top:none'>6</td>\
+  <td class=xl76 width=147 style='border-top:none;border-left:none;width:147pt'>&nbsp;</td>\
+  <td class=xl68 width=250 style='border-top:none;border-left:none;width:250pt'>&nbsp;</td>\
+  <td class=xl68 width=250 style='border-top:none;border-left:none;width:250pt'>&nbsp;</td>\
+  <td class=xl67 style='border-top:none;border-left:none'>&nbsp;</td>\
+ </tr>\
+ <tr height=42 style='height:42.0pt'>\
+  <td height=42 class=xl83 width=199 style='height:42.0pt;border-top:none;\
+  width:199pt'>Patents</td>\
+  <td class=xl76 width=143 style='border-top:none;border-left:none;width:143pt'>Patents</td>\
+  <td class=xl76 width=340 style='border-top:none;border-left:none;width:340pt'>&nbsp;</td>\
+  <td class=xl67 align=right style='border-top:none;border-left:none'>5</td>\
+  <td class=xl89 align=right style='border-top:none'>1</td>\
+  <td class=xl76 width=147 style='border-top:none;border-left:none;width:147pt'>..É\
+  the invention by Bellusci and Janssen (WO 2010/131966 A1, 2010) is an example\
+  of .É.</td>\
+  <td class=xl82 width=250 style='width:250pt'>Bellusci, G., &amp; Janssen, G.\
+  J. M. (2010). <font class='font6'>WO 2010/131966 A1</font><font class='font0'>.\
+  Geneva, Switzerland: World Intellectual Property Organization.</font></td>\
+  <td class=xl76 width=250 style='border-top:none;width:250pt'>&nbsp;</td>\
+  <td class=xl67 style='border-top:none;border-left:none'>&nbsp;</td>\
+ </tr>\
+ <tr height=56 style='height:56.0pt'>\
+  <td height=56 class=xl83 width=199 style='height:56.0pt;border-top:none;\
+  width:199pt'>Standards</td>\
+  <td class=xl76 width=143 style='border-top:none;border-left:none;width:143pt'>Standards</td>\
+  <td class=xl76 width=340 style='border-top:none;border-left:none;width:340pt'>&nbsp;</td>\
+  <td class=xl67 align=right style='border-top:none;border-left:none'>6</td>\
+  <td class=xl89 align=right style='border-top:none'>1</td>\
+  <td class=xl76 width=147 style='border-top:none;border-left:none;width:147pt'>É..\
+  In standard NEN 6578:2011 (2011) É..</td>\
+  <td class=xl68 width=250 style='border-left:none;width:250pt'>Nederlands\
+  Normalisatie Instituut. (2011). <font class='font6'>Water - Potentiometrische\
+  bepaling van het totale gehalte aan totaal fluoride NEN 6578:2011</font><font\
+  class='font0'>. Delft, The Netherlands: Author.</font></td>\
+  <td class=xl68 width=250 style='border-top:none;border-left:none;width:250pt'>&nbsp;</td>\
+  <td class=xl67 style='border-top:none;border-left:none'>&nbsp;</td>\
+ </tr>\
+ <tr height=84 style='height:84.0pt'>\
+  <td height=84 class=xl83 width=199 style='height:84.0pt;border-top:none;\
+  width:199pt'>Illustrations &amp; Maps</td>\
+  <td class=xl76 width=143 style='border-top:none;border-left:none;width:143pt'>Image\
+  in a book</td>\
+  <td class=xl76 width=340 style='border-top:none;border-left:none;width:340pt'>&nbsp;</td>\
+  <td class=xl67 align=right style='border-top:none;border-left:none'>8</td>\
+  <td class=xl89 align=right style='border-top:none'>1</td>\
+  <td class=xl76 width=147 style='border-top:none;border-left:none;width:147pt'>The\
+  image ÒLocal scour at piers as illustrated by model experiment and pir\
+  failureÓ (Transportation Association of Canada, 2004, p. 68) is É</td>\
+  <td class=xl76 width=250 style='border-top:none;border-left:none;width:250pt'>Transportation\
+  Association of Canada. (2004). <font class='font6'>Guide to bridge hydraulics</font><font\
+  class='font0'><span style='mso-spacerun:yes'>&nbsp;</span>(2nd ed.). London,\
+  England: Telford.</font></td>\
+  <td class=xl76 width=250 style='border-top:none;border-left:none;width:250pt'>Figure\
+  X.  Local scour at piers as illustrated by model experiment and pir failure.\
+  From <font class='font6'>Guide to bridge hydraulics </font><font class='font0'>(2nd\
+  ed., p. 68), by Transportation Association of Canada, 2004, London, England:\
+  Telford. Copyright 2004 by Transportation Association of Canada.</font></td>\
+  <td class=xl67 style='border-top:none;border-left:none'>&nbsp;</td>\
+ </tr>\
+ <tr height=56 style='height:56.0pt'>\
+  <td height=56 class=xl83 width=199 style='height:56.0pt;border-top:none;\
+  width:199pt'>Illustrations &amp; Maps</td>\
+  <td class=xl76 width=143 style='border-top:none;border-left:none;width:143pt'>Image\
+  on a website</td>\
+  <td class=xl76 width=340 style='border-top:none;border-left:none;width:340pt'>&nbsp;</td>\
+  <td class=xl67 align=right style='border-top:none;border-left:none'>8</td>\
+  <td class=xl89 align=right style='border-top:none'>2</td>\
+  <td class=xl76 width=147 style='border-top:none;border-left:none;width:147pt'>As\
+  shown in figure 7, Houston is one of the cities In the USA with a light rail\
+  systemÉ</td>\
+  <td class=xl68 width=250 style='border-top:none;border-left:none;width:250pt'>Haase,\
+  M. (2006). Light rail Houston [Photograph]. Retrieved from\
+  https://commons.wikimedia.org/wiki/File:Light_Rail_Houston.jpg</td>\
+  <td class=xl68 width=250 style='border-top:none;border-left:none;width:250pt'>Figure\
+  X: Light rail Houston. From Ò<font class='font6'>Wikimedia Commons,</font><font\
+  class='font0'>Ó by M. Haase, 2006\
+  (https://commons.wikimedia.org/wiki/File:Light_Rail_Houston.jpg). Licensed\
+  under CC BY 2.5</font></td>\
+  <td class=xl67 style='border-top:none;border-left:none'>&nbsp;</td>\
+ </tr>\
+ <tr height=15 style='height:15.0pt'>\
+  <td height=15 class=xl81 width=199 style='height:15.0pt;border-top:none;\
+  width:199pt'>Illustrations &amp; Maps</td>\
+  <td class=xl76 width=143 style='border-top:none;border-left:none;width:143pt'>Online\
+  maps</td>\
+  <td class=xl76 width=340 style='border-top:none;border-left:none;width:340pt'>&nbsp;</td>\
+  <td class=xl67 align=right style='border-top:none;border-left:none'>8</td>\
+  <td class=xl89 align=right style='border-top:none'>3</td>\
+  <td class=xl76 width=147 style='border-top:none;border-left:none;width:147pt'>&nbsp;</td>\
+  <td class=xl68 width=250 style='border-top:none;border-left:none;width:250pt'>&nbsp;</td>\
+  <td class=xl68 width=250 style='border-top:none;border-left:none;width:250pt'>&nbsp;</td>\
+  <td class=xl67 style='border-top:none;border-left:none'>&nbsp;</td>\
+ </tr>\
+ <tr height=15 style='height:15.0pt'>\
+  <td height=15 class=xl83 width=199 style='height:15.0pt;border-top:none;\
+  width:199pt'>Secondary sources</td>\
+  <td class=xl76 width=143 style='border-top:none;border-left:none;width:143pt'>Book</td>\
+  <td class=xl76 width=340 style='border-top:none;border-left:none;width:340pt'>&nbsp;</td>\
+  <td class=xl67 align=right style='border-top:none;border-left:none'>9</td>\
+  <td class=xl89 align=right style='border-top:none'>1</td>\
+  <td class=xl95 width=147 style='width:147pt'>&nbsp;</td>\
+  <td class=xl68 width=250 style='border-top:none;width:250pt'>&nbsp;</td>\
+  <td class=xl68 width=250 style='border-top:none;border-left:none;width:250pt'>&nbsp;</td>\
+  <td class=xl67 style='border-top:none;border-left:none'>&nbsp;</td>\
+ </tr>\
+ <tr height=56 style='height:56.0pt'>\
+  <td height=56 class=xl83 width=199 style='height:56.0pt;border-top:none;\
+  width:199pt'>Unpublished work</td>\
+  <td class=xl76 width=143 style='border-top:none;border-left:none;width:143pt'>Paper\
+  book</td>\
+  <td class=xl100 width=340 style='border-left:none;width:340pt'>&nbsp;</td>\
+  <td class=xl90 align=right style='border-left:none'>10</td>\
+  <td class=xl93 align=right style='border-top:none;border-left:none'>1</td>\
+  <td class=xl76 width=147 style='border-left:none;width:147pt'>Blackwell and\
+  Conrod (2003)</td>\
+  <td class=xl76 width=250 style='border-top:none;border-left:none;width:250pt'>Blackwell,\
+  E., &amp; Conrod, P. J. (2003). <font class='font6'>A five-dimesional measure\
+  of drinking </font><font class='font0'>motives. Unpublished manuscript,\
+  Department of Psychology, University of British Colombia, Vancouver, Canada.</font></td>\
+  <td class=xl68 width=250 style='border-top:none;border-left:none;width:250pt'>&nbsp;</td>\
+  <td class=xl67 style='border-top:none;border-left:none'>&nbsp;</td>\
+ </tr>\
+ <tr height=56 style='height:56.0pt'>\
+  <td height=56 class=xl83 width=199 style='height:56.0pt;border-top:none;\
+  width:199pt'>Unpublished work</td>\
+  <td class=xl76 width=143 style='border-top:none;border-left:none;width:143pt'>Situation\
+  sketch</td>\
+  <td class=xl76 width=340 style='border-left:none;width:340pt'>&nbsp;</td>\
+  <td class=xl67 align=right style='border-left:none'>10</td>\
+  <td class=xl89 align=right>2</td>\
+  <td class=xl76 width=147 style='border-top:none;border-left:none;width:147pt'>Based\
+  on Jansen (2017)É.</td>\
+  <td class=xl82 width=250 style='width:250pt'>Jansen, H. H. (2017). <font\
+  class='font6'>Stationsgebied Rotterdam</font><font class='font0'><span\
+  style='mso-spacerun:yes'>&nbsp;</span>[Situatieschets]. Unpublished,\
+  Department of Architecture, University of Technology, Delft, The Netherlands.</font></td>\
+  <td class=xl68 width=250 style='border-top:none;width:250pt'>&nbsp;</td>\
+  <td class=xl67 style='border-top:none;border-left:none'>&nbsp;</td>\
+ </tr>\
+ <tr height=42 style='height:42.0pt;mso-xlrowspan:3'>\
+  <td height=42 colspan=9 style='height:42.0pt;mso-ignore:colspan'></td>\
+ </tr>\
+ <tr height=14 style='height:14.0pt'>\
+  <td height=14 class=xl72 style='height:14.0pt'></td>\
+  <td colspan=8 style='mso-ignore:colspan'></td>\
+ </tr>\
+ <tr height=14 style='height:14.0pt'>\
+  <td height=14 colspan=9 style='height:14.0pt;mso-ignore:colspan'></td>\
+ </tr>\
+ <tr height=14 style='height:14.0pt'>\
+  <td height=14 class=xl86 style='height:14.0pt'></td>\
+  <td colspan=8 style='mso-ignore:colspan'></td>\
+ </tr>\
+</table>\
+\
+</body>\
+\
+</html>\
+"
 
-
-	
-	function getDummyFile() {
+	  function getDummyFile() {
 		/*
 		$("#testFile").on("getTest", function(event, param1) {
 			console.log(param1);
@@ -1169,20 +2028,19 @@ var jsonDummy = '\
 			try {
                	data = event.target.result;
 				apaContent = toJSON(data);
-				showContentOnScreen(apaContent);
+				addStyle(data);
 				showHeadingOptions(apaContent);
 				showTypeOptions(apaContent);
+				showCombinesWith(apaContent);
 				showExamples(apaContent);
-				showAppliesToOptions(apaContent);
 				$('#select-heading').focus();
-				console.log(JSON.stringify(apaContent));
 			}
 			catch(err) {
 				console.log(err);
 			}
 		}
 	}
-	//getDummyFile();
+	getDummyFile();
 	// end get dummy file for testing purposes
 	
 	// start getting json Dummy for testing purposes
@@ -1191,11 +2049,10 @@ var jsonDummy = '\
 			//console.log(jsonDummy.replace(/\t/g,"").replace(/\n/g,"").replace(/\\"/g,"\'").replace(/="/g,"='").replace(/">/g,"'>"));
 			apaContent = JSON.parse(jsonDummy.replace(/\t/g,"").replace(/\n/g,"").replace(/\\"/g,"\'").replace(/="/g,"='").replace(/">/g,"'>"));
 			addStyle(apaContent);
-			//showSortedHeadingOptions(apaContent);
+			apaContent = getSortedContentWithChangedId(apaContent);
 			showHeadingOptions(apaContent);
-			//showSortedTypeOptions(apaContent);
 			showTypeOptions(apaContent);
-			showAppliesToOptions(apaContent);
+			showCombinesWith(apaContent);
 			showExamples(apaContent);
 			$('#select-heading').focus();
 		}
@@ -1207,60 +2064,45 @@ var jsonDummy = '\
 	// end getting json Dummy for testing purposes
 	
 	// start showing the combination options
-	function showAppliesToOptions(apaContent) {
+	function showCombinesWith(apaContent) {
 		try {
-			//$('#combinationoptions').html("");
-			
-			var appliesToOptions = '<select id="select-applies_to" size="6"><br>';
-			var appliesTolist = {};
-			//var appliesToKey = $('#headingoptions :selected').val();
-			var appliesToText = $('#headingoptions :selected').text();
-			//console.log(appliesToKey);
-			var appliesToColumn = nameToKey(apaContent.header, "Combines with");
-			//console.log(typeof(appliesToColumn));
-			// maak lijst van alle 3e waarden en zoek daarbij naar 'Reports'
+			var combinesWithResult = '';
+			var combinesWithList = {};
+			var combinesWithHeading = $('#headingoptions :selected').text();
+			var combinesWithType = $('#typeoptions :selected').text();
+			var combinesWithColumn = nameToKey(apaContent.header, "Combines with");
 			$.each(apaContent.content, function(cIndex, cValue){
-				key = cValue.id
-				//console.log('key' + JSON.stringify(key));    // geeft de heading - id
-				//console.log(cValue[appliesToColumn] +' ' + appliesToText);
-				
-				$.each(cValue[appliesToColumn].split(','), function(aIndex, aValue) {
-					console.log(aIndex + ' ' + aValue);
-					if (aValue.replace(/\s+/, "") == appliesToText.replace(/\s+/, "")) {
-						console.log(aIndex + ' ' + aValue);
-						appliesTolist[key] = cValue[nameToKey(apaContent.header, "Heading")] + ' -> ' + cValue[nameToKey(apaContent.header, "Types")];
-					}
-				});
-				/*
-				for (appliesToHeading in cValue[appliesToColumn].split(',')) {
-					console.log(appliesToHeading +' aaa ' + appliesToText);
-					if (appliesToHeading == appliesToText) {
-						appliesTolist[appliesToText] = cValue[nameToKey(apaContent.header, "Heading")] + ' -> ' + cValue[nameToKey(apaContent.header, "Types")];
-					}
+				if ((combinesWithHeading == cValue[nameToKey(apaContent.header, "Heading")]) && (combinesWithType == cValue[nameToKey(apaContent.header, "Types")])) {
+					$.each(cValue[combinesWithColumn].split(','), function(aIndex, aValue) {
+						if (aValue.replace(/\s+/g, "") != "") {
+							combinesWithList[aValue] = aValue + "<hidden id=" + cValue.id + "</hidden>";
+						}
+					});
 				}
-				*/
 			});
-			$.each(appliesTolist, function(index, value) {
-				var selected = "";
-				if (index == 0) {							// first element
-					selected = " selected ";
-				}
-				appliesToOptions += '<option value="' + index + '"' + selected + '>' + value + '</option><br>';
+			$.each(combinesWithList, function(index, value) {
+				combinesWithResult += value + '<br>';
 			});
-			appliesToOptions += '</select><br>';
-			$('#combinationoptions').html(appliesToOptions);
+			if (combinesWithResult == "") {
+				$('#combinationoptions-title').hide();
+			}
+			else {
+				$('#combinationoptions-title').show();			
+			}
+			$('#combinationoptions').html(combinesWithResult);
 		}
-		catch(err) {
+		catch (err) {
 			console.log(err);
 		}
-	} 
-	// end showing the heading options so users can pick a value for getting a corrsponding type-list
-
+	}
+	// end showing the combination options
+	
 	// start showing the heading options so users can pick a value for getting a corrsponding type-list
 	function showHeadingOptions(apaContent) {
 		try {
 			var headingoptions = '<select id="select-heading" size="6"><br>';  // options for selecting a list of type-options
 			var headinglist = {};
+			var size = 0;
 			$.each(apaContent.content, function(cIndex, cValue){
 				var key = cValue.id.split("_")[0];
 				$.each(cValue, function(index, value){
@@ -1275,8 +2117,10 @@ var jsonDummy = '\
 					selected = " selected ";
 				}
 				headingoptions += '<option value="' + index + '"' + selected + '>' + value + '</option><br>';
+				size += 1;
 			});
 			headingoptions += '</select><br>';
+			headingoptions = headingoptions.replace(/"6"/, '"' + size + '"');
 			$('#headingoptions').html(headingoptions);
 		}
 		catch(err) {
@@ -1285,41 +2129,12 @@ var jsonDummy = '\
 	} 
 	// end showing the heading options so users can pick a value for getting a corrsponding type-list
 
-	// start showing the sorted heading options so users can pick a value for getting a corrsponding type-list
-	function showSortedHeadingOptions(apaContent) {
-		try {
-			var headingoptions = '<select id="select-heading" size="6"><br>';  // options for selecting a list of type-options
-			var headinglist = {};
-			$.each(apaContent.content, function(cIndex, cValue){
-				var key = cValue["3"] - 1;					// offset = 0
-				$.each(cValue, function(index, value){
-					if (index == 0) {						// 0 = headings
-						headinglist[key] = value;
-					}
-				});
-			});
-			console.log('--------' + JSON.stringify(headinglist));
-			$.each(headinglist, function(index, value){
-				var selected = "";
-				if (index == 0) {							// first element
-					selected = " selected ";
-				}
-				headingoptions += '<option value="' + index + '"' + selected + '>' + value + '</option><br>';
-			});
-			headingoptions += '</select><br>';
-			$('#headingoptions').html(headingoptions);
-		}
-		catch(err) {
-			console.log(err);
-		}
-	} 
-	// end showing the sorted heading options so users can pick a value for getting a corrsponding type-list
-
 	// start showing the type options so users can pick a value for getting a corresponding content
 	function showTypeOptions(apaContent) {
 		try {
 			var typeoptions = '<select id="select-type" size="6"><br>'     // options for a type belonging to the selected header-option
 			var typelist = {};
+			var size = 0;
 			$.each(apaContent.content, function(cIndex, cValue){
 				var selectedHeading = $('#headingoptions :selected').val();
 				var key = cValue.id;
@@ -1334,12 +2149,16 @@ var jsonDummy = '\
 			});
 			$.each(typelist, function(index, value){
 				var selected = "";
-				if (index.split("_")[1] == 0) {					// first element
+				if (index.split("_")[1] == pad(0,3)) {					// first element
 					selected = " selected ";
 				}
 				typeoptions += '<option value="' + index + '"' + selected + '>' + value + '</option><br>';
+				size += 1;
 			});
 			typeoptions += '</select><br>';
+			if (size > 6) {
+				typeoptions = typeoptions.replace(/"6"/, '"' + size + '"');
+			}
 			$('#typeoptions').html(typeoptions);
 		}
 		catch(err) {
@@ -1347,41 +2166,7 @@ var jsonDummy = '\
 		}
 	} 
 	// end showing the type options so users can pick a value for getting a corresponding content
-
-	// start showing the sorted type options so users can pick a value for getting a corresponding content
-	function showSortedTypeOptions(apaContent) {
-		try {
-			var typeoptions = '<select id="select-type" size="6"><br>'     // options for a type belonging to the selected header-option
-			var typelist = {};
-			$.each(apaContent.content, function(cIndex, cValue){
-				var selectedHeading = $('#headingoptions :selected').val();
-				var key = cValue["4"] - 1;						// offset = 0
-				var headingKey = cValue.id.split("_")[0];
-				$.each(cValue, function(index, value){
-					if (headingKey == selectedHeading) {
-						if (index == 1) {						// 1 = type
-							typelist[key] = value;
-						}
-					}
-				});
-			});
-			console.log('=======' + JSON.stringify(typelist));
-			$.each(typelist, function(index, value){
-				var selected = "";
-				if (index == "0") {					// first element
-					selected = " selected ";
-				}
-				typeoptions += '<option value="' + index + '"' + selected + '>' + value + '</option><br>';
-			});
-			typeoptions += '</select><br>';
-			$('#typeoptions').html(typeoptions);
-		}
-		catch(err) {
-			console.log(err);
-		}
-	} 
-	// end showing the sorted type options so users can pick a value for getting a corresponding content
-
+	
 	// start showing the examples
 	function showExamples(apaContent, recordId) {
 		try {
@@ -1409,50 +2194,74 @@ var jsonDummy = '\
 		}
 	} 
 	// end showing the examples
+	
+	function wrapReferenceExample(item) {
+		// prevHeight is a global variable and is initially set in headingoptions and typeoptions click-events
+		var insertPart = '<br>&nbsp;&nbsp;&nbsp;&nbsp;';
+		var re = new RegExp(insertPart, 'g');
+		prevHeight = referenceHeight;
 
 
-	function showContentOnScreen(apaContent) {
-		//myHeader = JSON.stringify(apaContent.header[0]).replace(/^"/,"").replace(/"$/,"").replace(/\n/g,"_").replace(/\s/g,"_").replace(/\./g,"_").replace(/\*/g,"_");
-		//console.log(myHeader);
-		//var myClass = JSON.stringify(apaContent.header[0]).replace(/^"/,"").replace(/"$/,"").replace(/\n/g,"_").replace(/\s/g,"_").replace(/\./g,"_").replace(/\*/g,"_");
-		//$("#result").append("<div class='" + myClass + "'><div>");
-		//$("." + myClass).append(myHeader);
-		
-		//console.log(JSON.stringify(apaContent.content));
-		try {
-			$.each(apaContent.content, function(cIndex, cValue){
-				console.log(cIndex + ' ' + JSON.stringify(cValue));
-				$.each(cValue, function(index, value){
-					index = index.replace(/\n/g,"_").replace(/\s/g,"_").replace(/\./g,"_").replace(/\*/g,"_");
-					myClass = JSON.stringify(apaContent.header[cIndex]);
-					if (myClass != undefined) {
-						try {
-							if (myClass.substring(0,1) == '"') {
-								myClass = myClass.substring(1, myClass.length);
-							}  
-							if (myClass.substring(myClass.length-1, myClass.length) == '"') {
-								myClass = myClass.substring(0, myClass.length-1);
-							} 
-						}
-						catch(err) {
-							console.log(err);
-						}
-						myClass = myClass.replace(/\s/g,"_").replace(/\./g,"_").replace(/\*/g,"_");
-						$("#result").append("<div class='" + myClass + index + "'><div>");
-						console.log('r'+cIndex);
-						$("." + myClass+index).css({"color":"rgb(" + cIndex*20 + "," + cIndex + "," + cIndex + ")"});
-						
-						myContent = JSON.stringify(value).replace(/^"/,"").replace(/"$/,"");						
-						console.log(myContent + ' ' + JSON.stringify(value) + "uuuu" + myClass + index);
-						$("." + myClass + index).append(myContent);
-					}
-				});
-			});
+
+
+//Nederlands Normalisatie Instituut. (2011). <font class="font6">Water - Potentiometrische bepaling van het totale gehalte aan totaal fluoride NEN 6578:2011</font><font class="font0">. Delft, The Netherlands: Author.</font>
+
+
+		// start save content in an array an empty the reference field
+		var specialDelimiter = "-=avdk2017=-";
+		var reSpecial = new RegExp(specialDelimiter, 'g');
+		var editedItem = $(item).html();
+		editedItem = editedItem.replace(/(<font.*?)\s+(.*?>)/g,"$1" + specialDelimiter + "$2");
+		editedItem = editedItem.replace(/(<span.*?)\s+(style.*?>)/g,"$1" + specialDelimiter + "$2");
+		textArray = editedItem.replace(/\s+/g," ").replace(re, "").split(' ');
+		$('#reference-list-example').html("");
+		// end save content in an array an empty the reference field
+
+		var newItem = "";
+		// building up word by word and check if the height changes
+			
+		var spliceIndentArray = [];		// holds the numbering of words, and decides where to insert an indent
+		for (i = 0; i < textArray.length; i++) {
+			//console.log('1: ' + spliceIndentArray.length + " " + textArray.length);
+			newItem += textArray[i].replace(insertPart, "") + " ";
+			$('#reference-list-example').html(newItem);			
+			if (prevHeight < $('#reference-list-example').height()) {
+				spliceIndentArray.push(i);
+				prevHeight = $('#reference-list-example').height();
+			}
 		}
-		catch(err) {
-			console.log(err);
+
+		// start empty the reference field, insert the insertPart and set reference-list-example
+		//console.log('spliceIndentArray: ' + spliceIndentArray);
+		newItem = "";
+		for (i = 0; i < spliceIndentArray.length; i++) {
+			textArray.splice(spliceIndentArray[i], 0, insertPart);
 		}
-	} 
+		for (i = 0; i < textArray.length; i++) {
+			newItem += textArray[i].replace(reSpecial," ") + " ";
+		}
+		newItem = newItem.replace(specialDelimiter," ");
+		$('#reference-list-example').html(newItem);
+
+		// start check for an extra line after inserting the insertPart and compensate if needed
+		//console.log("laatste height: " +  $('#reference-list-example').height());
+		if (prevHeight < $('#reference-list-example').height()) {
+			newItem = "";
+			if (textArray.length > 1) {
+				textArray.splice(textArray.length - 2, 0, insertPart);
+			}
+			for (i = 0; i < textArray.length; i++) {
+				newItem += textArray[i].replace(reSpecial," ") + " ";
+			}
+			
+			$('#reference-list-example').html(newItem);	
+			prevHeight = $('#reference-list-example').height();
+		}
+		// end check for an extra line after inserting the insertPart and compensate if needed
+
+
+		// end empty the reference field, insert the insertPart and set reference-list-example
+	}
 	
 	function startEvents(){
 		$('#toggleExample').off('click').on('click', function(){
@@ -1464,23 +2273,48 @@ var jsonDummy = '\
 				$(this).text('(voorbeeld uitklappen)');
 			}
 		});
+		$('#headingoptions').off('keyup').on('keyup', function(e){
+			if (e.which == 39) {
+				//console.log("right");
+				$('#select-type').focus();
+			}
+		});
+		$('#typeoptions').off('keyup').on('keyup', function(e){
+			if (e.which == 37) {
+				//console.log("left");
+				$('#select-heading').focus();
+			}
+		});
 		$('#headingoptions').off('change').on('change', function(){
 			showTypeOptions(apaContent);
 			var recordId = $('#typeoptions :selected').val();
 			showExamples(apaContent, recordId);
-			showAppliesToOptions(apaContent);
+			showCombinesWith(apaContent);
+			prevHeight = referenceHeight;				// see wrapReferenceExample
+			wrapReferenceExample($('#reference-list-example'));
+			//showAppliesToOptions(apaContent);
 			$('#select-type').focus();
+			$('#select-heading').focus();
 		});
 		$('#typeoptions').off('change').on('change', function(){
 			var recordId = $('#typeoptions :selected').val();
 			showExamples(apaContent, recordId);
-			showAppliesToOptions(apaContent);
+			showCombinesWith(apaContent);
+			prevHeight = referenceHeight;				// see wrapReferenceExample
+			wrapReferenceExample($('#reference-list-example'));
+			//showAppliesToOptions(apaContent);
 		});
+		/* niet meer in gebruik
 		$('#combinationoptions').off('click').on('click', function(){
 			var recordId = $('#combinationoptions :selected').val();
 			showExamples(apaContent, recordId);
 			// ?? Hier nog de heading en type weer aanplassen zodat het circulair wordt ??
 			//showAppliesToOptions(apaContent);
+		});
+		*/
+		
+		$(window).off('resize').on('resize', function(){
+			wrapReferenceExample($('#reference-list-example'));
 		});
 	};
 
@@ -1488,6 +2322,7 @@ var jsonDummy = '\
 	$(function initFunctions(){
 		$("#example").hide();
 		startEvents();
+		$('#headingoptions').trigger('change');
 	});
 
 
@@ -1496,4 +2331,3 @@ var jsonDummy = '\
 </script>
 </body>
 </html>
-
