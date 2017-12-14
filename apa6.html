@@ -67,8 +67,14 @@
 	}
 	#combinationoptions {
 		width: 200px;
-		border: 5px solid #2c829b;
-		z-index: -2;
+		border: 0px solid #2c829b;
+		z-index: 2;
+	}
+	.combination-item:hover {
+		cursor: pointer;
+	}
+	.highlight {
+		background-color: #FFFF00;
 	}
 	</style>
 </head>
@@ -138,6 +144,7 @@
 			</div>	
 		</div>
 	</div>
+	<!--
 	Stappen:
 	<ol>
 		<li>
@@ -159,7 +166,7 @@
 	</div>
 	
 	<div id="result"></div>
-
+    -->
 <script>
 	// start detecting which browser is used
 	function detectBrowser() { 
@@ -209,7 +216,7 @@
 	var referenceHeight = 0;	// holds and keeps the first measured height of the reference example field, see $(document).ready() 
 	var prevHeight = 0;			// holds the height of the reference example field, see wrapReferenceExample
 	var showEmpty = true;       // if true: empty panels are shown, otherwise: empty panels are hidden
-	var holdHistory = false;	// if true: history will work, NOTE: at this moment this workst only for headingsoptions and not for typeoptions, I don't know why ...
+	var holdHistory = false;	// if true: history will work, NOTE: at this moment this works only for headingsoptions and not for typeoptions, I don't know why ...
 </script>
 
 <script>
@@ -294,6 +301,7 @@
 		myLine = myLine.replace(/\u00A5/g, "&#x2022;");	// restore original character: bullet (¥)
 		myLine = myLine.replace(/\u00D2/g, "\"");	// restore original character: double quote (Ò)
 		myLine = myLine.replace(/\u00D3/g, "\"");	// restore original character: double quote (Ò)
+		myLine = myLine.replace(/\u00D5/g, "'");	// restore original character: single quote (Õ)
 		myLine = myLine.replace(/\u00C9/g, "...");	// undo excels translation of three dots (É)
 		myLine = myLine.replace(/^\s+/g, "");		// remove 2 or more space at the beginning of a line
 		myLine = myLine.replace(/\s+/g, " ");		// replace 2 or more space with 1 space 
@@ -1075,18 +1083,43 @@ var jsonDummy = '\
 		referenceHeight = $('#reference-list-example').height();	// see global, see wrapReferenceExample
 
     // The event listener for the file upload
-    document.getElementById('txtFileUpload').addEventListener('change', upload, false);
-
+    //document.getElementById('txtFileUpload').addEventListener('change', upload, false);
+	getFile();
+		
     // Method that checks that the browser supports the HTML5 File API
     function browserSupportFileUpload() {
         var isCompatible = false;
         if (window.File && window.FileReader && window.FileList && window.Blob) {
-        isCompatible = true;
+        	isCompatible = true;
         }
         return isCompatible;
     }
 
-    // Method that reads and processes the selected file
+	function getFile() {
+		var url = 'http://localhost:8000/apa6_source.htm';
+		$.ajax({
+			url: url, 
+			data: {},
+			dataType: 'html'})
+		.done(function(data) {
+			//alert('geladen');
+			apaContent = toJSON(data);
+			addStyle(data);
+			showHeadingOptions(apaContent);
+			showTypeOptions(apaContent);
+			showCombinesWith(apaContent);
+			showExamples(apaContent);
+			$('#select-heading').focus();
+           	if (data && data.length > 0) {
+             		//alert('Imported -' + data.length + '- rows successfully!');
+		    	// 1 toegevoegde regel: createForm(data);
+		    	//createForm(data);
+		  	  startEvents();   // opnieuw, omdat de html is aangepast
+			
+			};
+		});
+	}
+     // Method that reads and processes the selected file
     function upload(evt) {
 		if (!browserSupportFileUpload()) {
         	alert('The File APIs are not fully supported in this browser!');
@@ -2103,8 +2136,8 @@ td\
 			}
 		}
 	}
-	getDummyFile();
-	detectBrowser();
+	//getDummyFile();
+	//detectBrowser();
 	// end get dummy file for testing purposes
 	
 	// start getting json Dummy for testing purposes
@@ -2135,20 +2168,57 @@ td\
 			var combinesWithHeading = $('#headingoptions :selected').text();
 			var combinesWithType = $('#typeoptions :selected').text();
 			var combinesWithColumn = nameToKey(apaContent.header, "Combines with");
+			
+			var headingHighlight  = [];
+			
 			$.each(apaContent.content, function(cIndex, cValue){
 				if ((combinesWithHeading == cValue[nameToKey(apaContent.header, "Heading")]) && (combinesWithType == cValue[nameToKey(apaContent.header, "Types")])) {
 					$.each(cValue[combinesWithColumn].split(','), function(aIndex, aValue) {
 						aValue = aValue + "   ";
 						aValue = aValue.replace(/^\s+/g, "").replace(/\s+$/g, "");
 						if (aValue != "") {
-							combinesWithList[aValue] = '<span class="combination-item" id="' + aValue + '" example-id="' + cValue.id + '">' + aValue + '</span>';
+							//combinesWithList[aValue] = '<span class="combination-item" id="' + aValue + '" example-id="' + cValue.id + '">' + aValue + '</span>';
+
+							var exampleId = $('#select-heading option:contains('+ aValue + ')').val();
+							combinesWithList[aValue] = '<span class="combination-item" id="' + aValue + '" example-id="' + exampleId + '">' + aValue + '</span>';
+							
+							headingHighlight.push(aValue);
 						}
 					});
 				}
+				/*
+				// start highlight
+				if (combinesWithHeading == cValue[nameToKey(apaContent.header, "Heading")]) {
+					$.each(cValue[combinesWithColumn].split(','), function(aIndex, aValue) {
+						aValue = aValue + "   ";
+						aValue = aValue.replace(/^\s+/g, "").replace(/\s+$/g, "");
+						if (aValue != "") {
+							console.log($('#select-heading option').text(aValue));
+							//combinesWithList[aValue] = '<span class="combination-item" id="' + aValue + '" example-id="' + cValue.id + '">' + aValue + '</span>';
+						}
+					});
+					
+					console.log(combinesWithHeading);
+				}
+				// end highlight
+				*/
 			});
+			
+			// start highlight heading
+			$.each($('#select-heading option'), function(index, value) {
+				//console.log("ff" + $(value).html());
+				$('#select-heading option:contains('+ $(value).html() + ')').removeClass('highlight');
+				
+			});
+			$.each(headingHighlight, function(index, value) {
+				$('#select-heading option:contains('+ value + ')').addClass('highlight');
+			});
+			// end highlight heading
+			
 			$.each(combinesWithList, function(index, value) {
 				combinesWithResult += value + '<br>';
 			});
+			$('#combinationoptions').html(combinesWithResult);
 			if (combinesWithResult == "") {
 				$('#combinationoptions-title').hide();
 				$('#combinationoptions').hide();
@@ -2157,7 +2227,6 @@ td\
 				$('#combinationoptions-title').show();			
 				$('#combinationoptions').show();
 			}
-			$('#combinationoptions').html(combinesWithResult);
 			startEvents();									// html has changed on the fly, so start events again
 		}
 		catch (err) {
@@ -2184,10 +2253,20 @@ td\
 				var selected = "";
 				if (index == 0) {							// first element
 					selected = " selected ";
+					headingoptions += '<optgroup label="data (iets anders)">';
+					size += 1;
+				}
+				if (index  == 6 ) {
+					headingoptions += '</optgroup>'
+					headingoptions += '<optgroup label="detail (iets ander, vanaf item 6)">';
+					//headingoptions += '<option disabled><hr/></option><br>';
+					size += 1;
 				}
 				headingoptions += '<option value="' + index + '"' + selected + '>' + value + '</option><br>';
 				size += 1;
+				
 			});
+			headingoptions += '</optgroup>'
 			headingoptions += '</select><br>';
 			headingoptions = headingoptions.replace(/"6"/, '"' + size + '"');
 			$('#headingoptions').html(headingoptions);
@@ -2421,10 +2500,10 @@ td\
 			//showAppliesToOptions(apaContent);
 		});
 		*/
+		// /*
 		$('.combination-item').off('click').on('click', function(){
 			var myText = $(this).text();
 			var myVal = "";
-
 			$.each($('#select-heading option'), function() {
 				if (myText == $(this).text()) {
 					myVal = $(this).val();
@@ -2432,7 +2511,8 @@ td\
 			});
 			$('#headingoptions select').val(myVal);
 			$('#headingoptions').trigger('change');
-		});		
+		});
+		// */
 		$(window).off('resize').on('resize', function(){
 			wrapReferenceExample($('#reference-list-example'));
 		});
